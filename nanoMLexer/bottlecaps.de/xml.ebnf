@@ -1,0 +1,27 @@
+/* Extensible Markup Language (XML) 1.0 (Fifth Edition)
+ * version http://www.w3.org/TR/2008/REC-xml-20081126/
+ * extracted from http://www.w3.org/TR/xml/ on Fri Jan 26, 2018, 22:23 (UTC)
+ */
+
+document ::= prolog element Misc*
+
+program ::= function+
+
+function ::= NAME '(' ( | NAME ( ',' NAME)* ) ')' '{' ( | (decl ';')+ ) (expr ';')+ '}'
+
+decl ::= 'var' NAME ( ',' NAME )*
+
+expr ::= NAME 
+| NAME '=' expr 
+| NAME '(' ( | expr ( ',' expr)* ) ')'
+| 'return' expr
+| OPNAME expr
+| expr OPNAME expr
+| LITERAL
+| '(' expr ')'
+| ifexpr
+| 'while' '(' expr ')' body
+
+ifexpr ::= 'if' '(' expr ')' body ( | 'else' (body | ifexpr) )
+
+body ::= '{' (expr ';')+ '}'
