@@ -1,6 +1,7 @@
 /**
-	JFlex lexgreiningard�mi byggt � lesgreini fyrir NanoMorpho
+	JFlex lexgreiningardæmi byggt á lesgreini fyrir NanoMorpho
 	Höfundur: Sindri Pétur Ingimundarson, janúar 2017
+	          Stella Rut Guðmundsdóttir
 
 	Þennan lesgreini má þýða og keyra með skipununum
 		java -jar JFlex-1.6.1.jar nanomlexer.jflex
@@ -106,7 +107,7 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 	{_DELIM} { lexeme = yytext(); return yycharat(0); }
 
 	/* operators */
-	{_OPNAME} { lexeme = yytext(); return OPNAME }
+	{_OPNAME} { lexeme = yytext(); return OPNAME; }
 
 	/* comments */
 	{_COMMENT} { /* ignore */ }

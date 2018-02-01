@@ -791,7 +791,7 @@ public static void main( String[] args ) throws Exception
             }
           case 15: break;
           case 4: 
-            { lexeme = yytext(); return OPNAME;
+            { lexeme = yytext(); return OPNAME
             }
           case 16: break;
           case 5: 
