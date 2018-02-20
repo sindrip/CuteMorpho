@@ -471,6 +471,15 @@ public static void over(int t) throws Exception {
 	advance();
 }
 
+public static void over(int t, String key_w) throws Exception {
+	System.out.println(""+tokenFirst+": \'"+lexemeFirst+"\'");	
+	if (tokenFirst != t) {
+		throw new Exception("Expected " + key_w + " but found " + lexemeFirst +
+			" on line: " + lineFirst);
+	}
+	advance();
+}
+
 public static int peak() {
 	return token;
 }
@@ -490,18 +499,23 @@ public static void main( String[] args ) throws Exception
 }
 
 public static void program_t() throws Exception {
+	int f_counter = 0;
 	while(token != 0) {
 		function_t();
+		f_counter++;
+	}
+	if (f_counter == 0) {
+		throw new Exception("You must have at least one function");
 	}
 	over(0); //EOF
 }
 
 public static void function_t() throws Exception {
-	over(FUNC);
-	over(NAME);
+	over(FUNC, "func");
+	over(NAME, "A name");
 	over('(');
 	while (nextToken() != ')') {
-		over(NAME);
+		over(NAME, "A name");
 		if (nextToken() == ',') {
 			over(',');
 		}
@@ -522,11 +536,11 @@ public static void function_t() throws Exception {
 }
 
 public static void vardecl_t() throws Exception {
-	over(VAR);
-	over(NAME);
+	over(VAR, "var");
+	over(NAME, "A name");
 	while(nextToken() != ';') {
 		over(',');
-		over(NAME);
+		over(NAME, "A name");
 	}
 	over(';');
 }
@@ -534,12 +548,12 @@ public static void vardecl_t() throws Exception {
 public static void expr_t() throws Exception {
 	switch (nextToken()) {
 		case RETURN:
-			over(RETURN);
+			over(RETURN, "return");
 			expr_t();
 			break;
 		case NAME:
 			if (peak() == '=') {
-				over(NAME);
+				over(NAME, "A name");
 				over('=');
 				expr_t();
 			} else {
@@ -555,7 +569,7 @@ public static void expr_t() throws Exception {
 public static void binopexpr_t() throws Exception {
 	smallexpr_t();
 	while(nextToken() == OPNAME) {
-		over(OPNAME);
+		over(OPNAME, "An operator");
 		smallexpr_t();
 	}
 }
@@ -568,24 +582,24 @@ public static void smallexpr_t() throws Exception {
 			over(')');
 			break;
 		case LITERAL:
-			over(LITERAL);
+			over(LITERAL, "A literal");
 			break;
 		case OPNAME:
-			over(OPNAME);
+			over(OPNAME, "An operator");
 			smallexpr_t();
 			break;
 		case IF:
 			ifexpr_t();
 			break;
 		case WHILE:
-			over(WHILE);
+			over(WHILE, "while");
 			over('(');
 			expr_t();
 			over(')');
 			body_t();
 			break;
 		default:
-			over(NAME);
+			over(NAME, "A name");
 			if (nextToken() == '(') {
 				over('(');
 				expr_t();
@@ -600,14 +614,14 @@ public static void smallexpr_t() throws Exception {
 }
 
 public static void ifexpr_t() throws Exception {
-	over(IF);
+	over(IF, "if");
 	over('(');
 	expr_t();
 	over(')');
 	body_t();
 	
 	if(nextToken() == ELSE) {
-		over(ELSE);
+		over(ELSE, "if");
 		if (nextToken() == '{') {
 			body_t();
 		} else {
