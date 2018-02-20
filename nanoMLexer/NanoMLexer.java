@@ -440,6 +440,9 @@ public static String lexeme;
 public static String lexemeFirst;
 public static int token;
 public static int tokenFirst;
+// linecount
+public static int lineFirst;
+public static int line;
 
 public static NanoMLexer lexer;
 
@@ -454,13 +457,16 @@ public static String nextLexeme() {
 public static void advance() throws Exception {
 	lexemeFirst = lexeme;
 	tokenFirst = token;
+	lineFirst = line;
 	token = lexer.yylex();
+	line = lexer.yyline;
 }
 
 public static void over(int t) throws Exception {
 	System.out.println(""+tokenFirst+": \'"+lexemeFirst+"\'");	
 	if (tokenFirst != t) {
-		throw new Exception("Expected " + t + " but found " + tokenFirst);
+		throw new Exception("Expected " + ((char) t) + " but found " + lexemeFirst +
+			" on line: " + lineFirst);
 	}
 	advance();
 }
@@ -481,7 +487,6 @@ public static void main( String[] args ) throws Exception
 	init();
 
 	program_t();
-	// System.out.println(""+tokenFirst+": \'"+lexemeFirst+"\'");	
 }
 
 public static void program_t() throws Exception {
@@ -495,16 +500,17 @@ public static void function_t() throws Exception {
 	over(FUNC);
 	over(NAME);
 	over('(');
-	if (nextToken() == NAME) {
+	while (nextToken() != ')') {
 		over(NAME);
-		while(nextToken() == ',') {
+		if (nextToken() == ',') {
 			over(',');
-			over(NAME);		
 		}
 	}
 	over(')');
 	over('{');
-	vardecl_t();
+	while (nextToken() == VAR) {
+		vardecl_t();
+	}
 
 	expr_t();
 	over(';');
@@ -512,45 +518,84 @@ public static void function_t() throws Exception {
 		expr_t();
 		over(';');
 	}
-
 	over('}');
 }
 
 public static void vardecl_t() throws Exception {
-	if (nextToken() == VAR) {
-		over(VAR);
+	over(VAR);
+	over(NAME);
+	while(nextToken() != ';') {
+		over(',');
 		over(NAME);
-		while(nextToken() == ',') {
-			over(',');
-			over(NAME);		
-		}
-		over(';');
 	}
+	over(';');
 }
 
 public static void expr_t() throws Exception {
-	if (nextToken() == NAME) {
-		over(NAME);
-		System.out.println("am here ok");
-		System.out.println(peak());
-		if (nextToken() == '=') {
-			over('=');
-			over(LITERAL);
-		} else if (nextToken() == '(') {
+	switch (nextToken()) {
+		case RETURN:
+			over(RETURN);
+			expr_t();
+			break;
+		case NAME:
+			if (peak() == '=') {
+				over(NAME);
+				over('=');
+				expr_t();
+			} else {
+				binopexpr_t();
+			}
+			break;
+		default:
+			binopexpr_t();
+			break;
+	}
+}
+
+public static void binopexpr_t() throws Exception {
+	smallexpr_t();
+	while(nextToken() == OPNAME) {
+		over(OPNAME);
+		smallexpr_t();
+	}
+}
+
+public static void smallexpr_t() throws Exception {
+	switch (nextToken()) {
+		case '(':
 			over('(');
 			expr_t();
-			while(nextToken() == ',') {
-				over(',');
+			over(')');
+			break;
+		case LITERAL:
+			over(LITERAL);
+			break;
+		case OPNAME:
+			over(OPNAME);
+			smallexpr_t();
+			break;
+		case IF:
+			ifexpr_t();
+			break;
+		case WHILE:
+			over(WHILE);
+			over('(');
+			expr_t();
+			over(')');
+			body_t();
+			break;
+		default:
+			over(NAME);
+			if (nextToken() == '(') {
+				over('(');
 				expr_t();
+				while(nextToken() != ')') {
+					over(',');
+					expr_t();
+				}
+				over(')');
 			}
-		} else {
-			//SHOULD BE NOTHING OK
-		}
-
-	} else if (nextToken() == IF) {
-		ifexpr_t();
-	} else {
-		throw new Exception("WHAT THE HELL IS THIS???");
+			break;
 	}
 }
 
@@ -570,8 +615,6 @@ public static void ifexpr_t() throws Exception {
 		}
 	}
 }
-// minni expression her fyrir nedan
-
 
 public static void body_t() throws Exception {
 	over('{');
@@ -847,6 +890,58 @@ public static void body_t() throws Exception {
     while (true) {
       zzMarkedPosL = zzMarkedPos;
 
+      boolean zzR = false;
+      int zzCh;
+      int zzCharCount;
+      for (zzCurrentPosL = zzStartRead  ;
+           zzCurrentPosL < zzMarkedPosL ;
+           zzCurrentPosL += zzCharCount ) {
+        zzCh = Character.codePointAt(zzBufferL, zzCurrentPosL, zzMarkedPosL);
+        zzCharCount = Character.charCount(zzCh);
+        switch (zzCh) {
+        case '\u000B':
+        case '\u000C':
+        case '\u0085':
+        case '\u2028':
+        case '\u2029':
+          yyline++;
+          zzR = false;
+          break;
+        case '\r':
+          yyline++;
+          zzR = true;
+          break;
+        case '\n':
+          if (zzR)
+            zzR = false;
+          else {
+            yyline++;
+          }
+          break;
+        default:
+          zzR = false;
+        }
+      }
+
+      if (zzR) {
+        // peek one character ahead if it is \n (if we have counted one line too much)
+        boolean zzPeek;
+        if (zzMarkedPosL < zzEndReadL)
+          zzPeek = zzBufferL[zzMarkedPosL] == '\n';
+        else if (zzAtEOF)
+          zzPeek = false;
+        else {
+          boolean eof = zzRefill();
+          zzEndReadL = zzEndRead;
+          zzMarkedPosL = zzMarkedPos;
+          zzBufferL = zzBuffer;
+          if (eof) 
+            zzPeek = false;
+          else 
+            zzPeek = zzBufferL[zzMarkedPosL] == '\n';
+        }
+        if (zzPeek) yyline--;
+      }
       zzAction = -1;
 
       zzCurrentPosL = zzCurrentPos = zzStartRead = zzMarkedPosL;
