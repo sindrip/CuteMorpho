@@ -463,7 +463,6 @@ public static void advance() throws Exception {
 }
 
 public static void over(int t) throws Exception {
-	System.out.println(""+tokenFirst+": \'"+lexemeFirst+"\'");	
 	if (tokenFirst != t) {
 		throw new Exception("Expected " + ((char) t) + " but found " + lexemeFirst +
 			" on line: " + lineFirst);
@@ -472,7 +471,6 @@ public static void over(int t) throws Exception {
 }
 
 public static void over(int t, String key_w) throws Exception {
-	System.out.println(""+tokenFirst+": \'"+lexemeFirst+"\'");	
 	if (tokenFirst != t) {
 		throw new Exception("Expected " + key_w + " but found " + lexemeFirst +
 			" on line: " + lineFirst);
@@ -499,13 +497,8 @@ public static void main( String[] args ) throws Exception
 }
 
 public static void program_t() throws Exception {
-	int f_counter = 0;
 	while(token != 0) {
 		function_t();
-		f_counter++;
-	}
-	if (f_counter == 0) {
-		throw new Exception("You must have at least one function");
 	}
 	over(0); //EOF
 }
