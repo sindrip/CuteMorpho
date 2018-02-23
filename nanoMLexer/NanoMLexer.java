@@ -18,6 +18,7 @@
  */
 
 import java.io.*;
+import java.util.Vector;
 
 
 /**
@@ -478,7 +479,7 @@ public static void over(int t, String key_w) throws Exception {
 	advance();
 }
 
-public static int peak() {
+public static int peek() {
 	return token;
 }
 
@@ -492,25 +493,28 @@ public static void main( String[] args ) throws Exception
 {
 	lexer = new NanoMLexer(new FileReader(args[0]));
 	init();
-
-	program_t();
+	Object[] intermediate = program_t();
 }
 
-public static void program_t() throws Exception {
+public static Object[] program_t() throws Exception {
+	Vector<Object> funcs = new Vector<Object>();
 	while(token != 0) {
 		function_t();
 	}
 	over(0); //EOF
+	return funcs.toArray();
 }
 
 public static void function_t() throws Exception {
+	
 	over(FUNC, "func");
 	over(NAME, "A name");
 	over('(');
-	while (nextToken() != ')') {
+	if (nextToken() != ')') {
 		over(NAME, "A name");
-		if (nextToken() == ',') {
+		while (nextToken() == ',') {
 			over(',');
+			over(NAME, "A name");
 		}
 	}
 	over(')');
@@ -545,7 +549,7 @@ public static void expr_t() throws Exception {
 			expr_t();
 			break;
 		case NAME:
-			if (peak() == '=') {
+			if (peek() == '=') {
 				over(NAME, "A name");
 				over('=');
 				expr_t();

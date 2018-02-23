@@ -43,7 +43,7 @@ func test3() {
 	};
 }
 
-func test4() {
+func test4(flot) {
 	// vardecl
 	var x;
 	var t;
