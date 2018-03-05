@@ -107,6 +107,21 @@ public static void main( String[] args ) throws Exception
 	lexer = new NanoMLexer(new FileReader(args[0]));
 	init();
 	Object[] intermediate = program_t();
+	generateProgram("flot", intermediate);
+}
+
+public static void generateProgram(String name, Object[] p) {
+	for (int i = 0; i != p.length; i++) generateFunction((Object[])p[i]);
+}
+
+public static void generateFunction(Object[] f) {
+	String fname = (String) f[0];
+	int argcount = (Integer) f[1];
+	int varcount = (Integer) f[2];
+	System.out.println(fname);
+	System.out.println(argcount);
+	System.out.println(varcount);	
+
 }
 
 public static int varPos(String name) throws Exception {
