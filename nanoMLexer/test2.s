@@ -12,36 +12,36 @@ func test(x1) {
 	};
 }
 
-func test2(x, y, z) {
-	// vardecl
-	var x, y, z;
+// func test2(x, y, z) {
+// 	// vardecl
+// 	var x, y, z;
 
-	// expr
-	x = true;
-	y = 'y';
-	z = "flot";
-	x = 2.34e-5;
+// 	// expr
+// 	x = true;
+// 	y = 'y';
+// 	z = "flot";
+// 	x = 2.34e-5;
 
-	if (x) {
-		x = false;
-	};
+// 	if (x) {
+// 		x = false;
+// 	};
 
-	return y;
-}
+// 	return y;
+// }
 
-func test3() {
-	// no vardecl
+// func test3() {
+// 	// no vardecl
 	
-	// expr
-	x = true;
-	y = 'y';
-	z = "flot";
-	x = 2.34e-5;
+// 	// expr
+// 	x = true;
+// 	y = 'y';
+// 	z = "flot";
+// 	x = 2.34e-5;
 
-	if (x) {
-		x = false;
-	};
-}
+// 	if (x) {
+// 		x = false;
+// 	};
+// }
 
 func test4(flot) {
 	// vardecl

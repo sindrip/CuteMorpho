@@ -501,13 +501,30 @@ public static void main( String[] args ) throws Exception
 	Object[] intermediate = program_t();
 }
 
+public static int varPos(String name) throws Exception {
+	int ret;
+	try {
+		ret = vars.get(name);
+	} catch (Exception e) {
+		throw new Exception("Variable \'" + name + "\' not declared at line: " + lineFirst);
+	}
+	return ret;
+}
+
+public static void putMap(String name, HashMap<String, Integer> dict) throws Exception {
+	if (vars.get(name) != null || args.get(name) != null) {
+		throw new Exception("\'" + name + "\'" + " declared multipe times at line: " + lineFirst);
+	}
+	dict.put(name, dict.size());
+}
+
 public static Object[] program_t() throws Exception {
 	Vector<Object> funcs = new Vector<Object>();
 	while(token != 0) {
 		funcs.add(function_t());
 	}
 	over(0); //EOF
-	System.out.println( ((Object[]) ((Object[]) funcs.get(0))[3]));	
+	System.out.println( ((Object[]) ((Object[]) ((Object[]) funcs.get(0))[3])[0])[0] );	
 	return funcs.toArray();
 }
 
@@ -523,10 +540,10 @@ public static Object[] function_t() throws Exception {
 	func.add(over(NAME, "A name"));
 	over('(');
 	if (nextToken() != ')') {
-		args.put(over(NAME, "A name"), args.size());
+		putMap(over(NAME, "A name"), args);
 		while (nextToken() == ',') {
 			over(',');
-			args.put(over(NAME, "A name"), args.size());
+			putMap(over(NAME, "A name"), args);			
 		}
 	}
 	over(')');
@@ -537,10 +554,11 @@ public static Object[] function_t() throws Exception {
 	func.add(args.size());
 	func.add(vars.size());
 
-	expr_t();
+	Vector<Object> expr = new Vector<>();
+	
+	expr.add(expr_t());
 	over(';');
 
-	Vector<Object> expr = new Vector<>();
 	while(nextToken() != '}') {
 		expr.add(expr_t());
 		over(';');
@@ -553,110 +571,130 @@ public static Object[] function_t() throws Exception {
 
 public static void vardecl_t() throws Exception {
 	over(VAR, "var");
-	vars.put(over(NAME, "A name"), vars.size());
+	putMap(over(NAME, "A name"), vars);
 	while(nextToken() != ';') {
 		over(',');
-		vars.put(over(NAME, "A name"), vars.size());
+		putMap(over(NAME, "A name"), vars);
 	}
 	over(';');
 }
 
-public static Object[] expr_t() throws Exception {	
+public static Object[] expr_t() throws Exception {
+	Object[] res;	
 	switch (nextToken()) {
 		case RETURN:
 			over(RETURN, "return");
-			expr_t();
-			break;
+			res = new Object[]{"RETURN", expr_t()};
+			return res;
 		case NAME:
 			if (peek() == '=') {
-				over(NAME, "A name");
-				over('=');
-				expr_t();
+				int varp = varPos(over(NAME, "A name"));
+				over('=');								
+				res = new Object[]{"STORE", varp, expr_t()};
+				return res;
 			} else {
-				binopexpr_t();
+				return binopexpr_t();
 			}
-			break;
 		default:
-			binopexpr_t();
-			break;
+			return binopexpr_t();
 	}
-	return new Object[]{"COOL"};	
 }
 
-public static void binopexpr_t() throws Exception {
-	smallexpr_t();
+public static Object[] binopexpr_t() throws Exception {
+	Vector<Object> res = new Vector<>();
+	res.add(smallexpr_t());
 	while(nextToken() == OPNAME) {
-		over(OPNAME, "An operator");
-		smallexpr_t();
+		String operator;
+		operator = over(OPNAME, "An operator");
+		res.add(smallexpr_t());
+		Object[] opcall = new Object[]{"CALL", operator, res.toArray()};
+		res = new Vector<>();
+		res.add(opcall);
 	}
+	return res.toArray();
 }
 
-public static void smallexpr_t() throws Exception {
+public static Object[] smallexpr_t() throws Exception {
+
+	Object[] res;
 	switch (nextToken()) {
 		case '(':
 			over('(');
-			expr_t();
+			res = expr_t();
 			over(')');
 			break;
 		case LITERAL:
-			over(LITERAL, "A literal");
+			res = new Object[]{"LITERAL", over(LITERAL, "A literal")};
 			break;
 		case OPNAME:
-			over(OPNAME, "An operator");
-			smallexpr_t();
+			String operator = over(OPNAME, "An operator");
+			res = new Object[]{"CALL", operator, smallexpr_t()};
 			break;
 		case IF:
-			ifexpr_t();
+			res = ifexpr_t();
 			break;
 		case WHILE:
+			Object cond, body;
 			over(WHILE, "while");
 			over('(');
-			expr_t();
+			cond = expr_t();
 			over(')');
-			body_t();
+			body = body_t();
+			res = new Object[]{"WHILE", cond, body};
 			break;
 		default:
-			over(NAME, "A name");
+			String name = over(NAME, "A name");
 			if (nextToken() == '(') {
+				Vector<Object> lArgs = new Vector<>();
 				over('(');
-				expr_t();
+				lArgs.add(expr_t());
 				while(nextToken() != ')') {
 					over(',');
-					expr_t();
+					lArgs.add(expr_t());
 				}
 				over(')');
+				res = new Object[]{"CALL", name, lArgs.toArray()};
+			} else {
+				res = new Object[]{"FETCH", vars.get(name)};	
 			}
 			break;
 	}
+	return res;
 }
 
-public static void ifexpr_t() throws Exception {
+public static Object[] ifexpr_t() throws Exception {
+	Object cond, thenexpr, elseexpr;
+	elseexpr = null;
+
 	over(IF, "if");
 	over('(');
-	expr_t();
+	cond = expr_t();
 	over(')');
-	body_t();
+	thenexpr = body_t();
 	
 	if(nextToken() == ELSE) {
-		over(ELSE, "if");
+		over(ELSE, "else");
 		if (nextToken() == '{') {
-			body_t();
+			elseexpr = body_t();
 		} else {
-			ifexpr_t();
+			elseexpr = ifexpr_t();
 		}
 	}
+
+	return new Object[]{"IF", cond, thenexpr, elseexpr};
 }
 
-public static void body_t() throws Exception {
+public static Object[] body_t() throws Exception {
+	Vector<Object> res = new Vector<>();
 	over('{');
-	expr_t();
+	res.add(expr_t());
 	over(';');
 	while(nextToken() != '}') {
-		expr_t();
+		res.add(expr_t());
 		over(';');
 	}
 	over('}');
-	
+	return res.toArray();
 }
 
 
