@@ -196,7 +196,13 @@ public static void generateExpr(Object[] e) {
 			Object[] args = (Object[])e[2];
 			int i;
 			for(i = 0; i < args.length; i++)
-				generateExpr((Object[])args[i]);
+				if(i == 0) {
+					generateExpr((Object[])args[i]);
+				}
+				else {
+					emit("(Push)");
+					generateExpr((Object[])args[i]);
+				}
 			emit("(Call #\""+e[1]+"[f"+i+"]\" "+i+")");
 			return;
 		default:

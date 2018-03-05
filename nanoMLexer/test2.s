@@ -15,6 +15,8 @@ func test(x1) {
 func main() {
 	var x;
 
+	x = 1+1+1;
+	writeln(x);
 	return 1+1+1;
 }
 
