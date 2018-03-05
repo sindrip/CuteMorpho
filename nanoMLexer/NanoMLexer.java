@@ -19,6 +19,7 @@
 
 import java.io.*;
 import java.util.Vector;
+import java.util.HashMap;
 
 
 /**
@@ -463,20 +464,24 @@ public static void advance() throws Exception {
 	line = lexer.yyline;
 }
 
-public static void over(int t) throws Exception {
+public static String over(int t) throws Exception {
 	if (tokenFirst != t) {
 		throw new Exception("Expected " + ((char) t) + " but found " + lexemeFirst +
 			" on line: " + lineFirst);
 	}
+	String ret = lexemeFirst;
 	advance();
+	return ret;
 }
 
-public static void over(int t, String key_w) throws Exception {
+public static String over(int t, String key_w) throws Exception {
 	if (tokenFirst != t) {
 		throw new Exception("Expected " + key_w + " but found " + lexemeFirst +
 			" on line: " + lineFirst);
 	}
+	String ret = lexemeFirst;
 	advance();
+	return ret;
 }
 
 public static int peek() {
@@ -499,22 +504,29 @@ public static void main( String[] args ) throws Exception
 public static Object[] program_t() throws Exception {
 	Vector<Object> funcs = new Vector<Object>();
 	while(token != 0) {
-		function_t();
+		funcs.add(function_t());
 	}
 	over(0); //EOF
+	System.out.println( ((Object[]) ((Object[]) funcs.get(0))[3]));	
 	return funcs.toArray();
 }
 
-public static void function_t() throws Exception {
-	
+static HashMap<String, Integer> args;
+static HashMap<String, Integer> vars;
+public static Object[] function_t() throws Exception {
+	args = new HashMap<>();
+	vars = new HashMap<>();
+
+	Vector<Object> func = new Vector<>();
 	over(FUNC, "func");
-	over(NAME, "A name");
+	// Add name of function to object array
+	func.add(over(NAME, "A name"));
 	over('(');
 	if (nextToken() != ')') {
-		over(NAME, "A name");
+		args.put(over(NAME, "A name"), args.size());
 		while (nextToken() == ',') {
 			over(',');
-			over(NAME, "A name");
+			args.put(over(NAME, "A name"), args.size());
 		}
 	}
 	over(')');
@@ -522,27 +534,34 @@ public static void function_t() throws Exception {
 	while (nextToken() == VAR) {
 		vardecl_t();
 	}
+	func.add(args.size());
+	func.add(vars.size());
 
 	expr_t();
 	over(';');
+
+	Vector<Object> expr = new Vector<>();
 	while(nextToken() != '}') {
-		expr_t();
+		expr.add(expr_t());
 		over(';');
 	}
 	over('}');
+
+	func.add(expr.toArray());
+	return func.toArray();
 }
 
 public static void vardecl_t() throws Exception {
 	over(VAR, "var");
-	over(NAME, "A name");
+	vars.put(over(NAME, "A name"), vars.size());
 	while(nextToken() != ';') {
 		over(',');
-		over(NAME, "A name");
+		vars.put(over(NAME, "A name"), vars.size());
 	}
 	over(';');
 }
 
-public static void expr_t() throws Exception {
+public static Object[] expr_t() throws Exception {	
 	switch (nextToken()) {
 		case RETURN:
 			over(RETURN, "return");
@@ -561,6 +580,7 @@ public static void expr_t() throws Exception {
 			binopexpr_t();
 			break;
 	}
+	return new Object[]{"COOL"};	
 }
 
 public static void binopexpr_t() throws Exception {
