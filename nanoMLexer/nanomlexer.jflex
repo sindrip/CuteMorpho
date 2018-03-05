@@ -110,18 +110,101 @@ public static void main( String[] args ) throws Exception
 	generateProgram("flot", intermediate);
 }
 
-public static void generateProgram(String name, Object[] p) {
-	for (int i = 0; i != p.length; i++) generateFunction((Object[])p[i]);
+public static void emit(String line) {
+	System.out.println(line);
 }
 
+public static void emit(int i) {
+	System.out.println(i);
+}
+
+public static void generateProgram(String name, Object[] p) {
+	emit("\""+name+".mexe\" = main in");
+	emit("!{{");
+	for (int i = 0; i != p.length; i++) generateFunction((Object[])p[i]);
+	emit("}}*BASIS;");
+}
+
+public static int gotoCounter;
 public static void generateFunction(Object[] f) {
+	// Reset the goto counter
+	gotoCounter = 0;
+	//
 	String fname = (String) f[0];
 	int argcount = (Integer) f[1];
 	int varcount = (Integer) f[2];
-	System.out.println(fname);
-	System.out.println(argcount);
-	System.out.println(varcount);	
+	emit("#\"" + fname + "[f" + argcount + "]\" =");
+	emit("[");
+	for(int i = 0; i < varcount; i++) {
+		emit("(MakeVal null)");
+		emit("(Push)");
+	}
+	Object[] expressions = (Object[]) f[3];
+	for(int i = 0; i < expressions.length; i++) {
+		generateExpr((Object[]) expressions[i]);
+	}	
 
+	emit("];");
+}
+
+public static void generateExpr(Object[] e) {
+	switch((String) e[0]) {
+		case "RETURN":
+			generateExpr((Object[]) e[1]);
+			emit("(Return)");
+			return;
+		case "FETCH":
+			emit("(Fetch "+e[1]+")");
+			return;
+		case "LITERAL":
+			emit("(MakeVal "+(String)e[1]+")");
+			return;
+		case "STORE":
+			generateExpr((Object[]) e[2]);
+			emit("(Store "+(Integer) e[1]+")");
+			return;
+		case "IF":
+			// ATH
+			// Endurskoða hvernig goto nöfn eru veitt
+
+			// Check if there is an else clause present
+			if (e[3] == null) {
+				int gc1 = ++gotoCounter;
+				generateExpr((Object[])e[1]);
+				emit("(GoFalse _L"+gc1+")");
+				generateExpr((Object[])e[2]);
+				emit("_L"+gc1+":");
+			} else {
+				int gc1 = ++gotoCounter;
+				int gc2 = ++gotoCounter;				
+				generateExpr((Object[])e[1]);
+				emit("(GoFalse _L"+gc1+")");
+				generateExpr((Object[])e[2]);
+				emit("(Go _L"+gc2+")");
+				emit("_L"+gc1+":");
+				generateExpr((Object[])e[3]);
+				emit("_L"+gc2+":");
+			}
+			return;
+		case "BODY":
+			Object[] bodyExpressions = (Object[]) e[1];
+			for(int i = 0; i < bodyExpressions.length; i++) {
+				generateExpr((Object[]) bodyExpressions[i]);
+			}
+			return;
+		case "CALL":
+			Object[] args = (Object[])e[2];
+			int i;
+			for(i = 0; i < args.length; i++)
+				generateExpr((Object[])args[i]);
+			emit("(Call #\""+e[1]+"[f"+i+"]\" "+i+")");
+			return;
+		default:
+			emit("===IMPLEMENT THIS FUNCTIONALITY===");
+			emit((String) e[0]);
+			emit("==================================");		
+			break;
+	}
 }
 
 public static int varPos(String name) throws Exception {
@@ -147,7 +230,7 @@ public static Object[] program_t() throws Exception {
 		funcs.add(function_t());
 	}
 	over(0); //EOF
-	System.out.println( ((Object[]) ((Object[]) ((Object[]) funcs.get(0))[3])[0])[0] );	
+	// System.out.println( ((Object[]) ((Object[]) ((Object[]) funcs.get(0))[3])[0])[0] );	
 	return funcs.toArray();
 }
 
@@ -212,7 +295,7 @@ public static Object[] expr_t() throws Exception {
 		case NAME:
 			if (peek() == '=') {
 				int varp = varPos(over(NAME, "A name"));
-				over('=');								
+				over('=');
 				res = new Object[]{"STORE", varp, expr_t()};
 				return res;
 			} else {
@@ -224,7 +307,7 @@ public static Object[] expr_t() throws Exception {
 }
 
 public static Object[] binopexpr_t() throws Exception {
-	Vector<Object> res = new Vector<>();
+	Vector<Object[]> res = new Vector<>();
 	res.add(smallexpr_t());
 	while(nextToken() == OPNAME) {
 		String operator;
@@ -234,6 +317,11 @@ public static Object[] binopexpr_t() throws Exception {
 		res = new Vector<>();
 		res.add(opcall);
 	}
+	// Don't convert expressions floating up from smallexpr
+	if (res.size() == 1) {
+		return res.get(0);
+	}
+	// If binop was applied
 	return res.toArray();
 }
 
@@ -317,7 +405,7 @@ public static Object[] body_t() throws Exception {
 		over(';');
 	}
 	over('}');
-	return res.toArray();
+	return new Object[]{"BODY", res.toArray()};
 }
 
 %}

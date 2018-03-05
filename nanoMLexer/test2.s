@@ -12,6 +12,37 @@ func test(x1) {
 	};
 }
 
+func main() {
+	var x;
+
+	return 1+1+1;
+}
+
+// func test4(flot) {
+// 	// vardecl
+// 	var x;
+// 	var t;
+// 	var _cool_beans;
+// 	var res;
+
+// 	x = 1;
+// 	t = 2;
+// 	_cool_beans = "flot";
+// 	res = test2(x, t, _cool_beans);
+
+// 	while(x < t +1) {
+// 		x += 1;
+// 	};
+
+// 	if (x) {
+// 		x = 2;
+// 	} else if (y) {
+// 		x = 3;
+// 	} else {
+// 		x = "flot";
+// 	};
+// }
+
 // func test2(x, y, z) {
 // 	// vardecl
 // 	var x, y, z;
@@ -43,28 +74,3 @@ func test(x1) {
 // 	};
 // }
 
-func test4(flot) {
-	// vardecl
-	var x;
-	var t;
-	var _cool_beans;
-	var res;
-
-	x = 1;
-	t = 2;
-	_cool_beans = "flot";
-	res = test2(x, t, _cool_beans);
-
-	while(x < t +1) {
-		x += 1;
-	};
-
-	if (x) {
-		x = 2;
-	} else if (y) {
-		x = 3;
-	} else {
-		x = "flot";
-	};
-
-}
