@@ -1,0 +1,42 @@
+func squared(x) {
+	return x*x;
+}
+
+func fibo(n) {
+	if (n <= 2) {
+		return 1;
+	};
+	return fibo(n - 1) + fibo(n - 2);
+}
+
+func countdown(n) {
+	while (n > 0) {
+		writeln(n = n - 1);
+	};
+}
+
+func iff(x, y, z) {
+	if (x != null) {
+		return "x";
+	} else if (y != null) {
+		return "y";
+	} else if (z != null) {
+		return "z";
+	};
+	return "all null :(";
+}
+
+func main() {
+	var x;
+
+	x = 1+1+1;
+	writeln(x);
+	writeln(squared(x));
+	writeln(fibo(15));
+	writeln("flott");
+	countdown(10);
+	writeln(iff(1, 1, 1));
+	writeln(iff(null, 1, 1));
+	writeln(iff(null, null, 1));
+	writeln(iff(null, null, null));
+}
