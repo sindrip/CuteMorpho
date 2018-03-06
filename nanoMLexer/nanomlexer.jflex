@@ -118,17 +118,17 @@ public static void emit(int i) {
 	System.out.println(i);
 }
 
+public static int gotoCounter;
 public static void generateProgram(String name, Object[] p) {
+	gotoCounter = 0;	
 	emit("\""+name+".mexe\" = main in");
 	emit("!{{");
 	for (int i = 0; i != p.length; i++) generateFunction((Object[])p[i]);
 	emit("}}*BASIS;");
 }
 
-public static int gotoCounter;
 public static void generateFunction(Object[] f) {
 	// Reset the goto counter
-	gotoCounter = 0;
 	//
 	String fname = (String) f[0];
 	int argcount = (Integer) f[1];
@@ -205,6 +205,16 @@ public static void generateExpr(Object[] e) {
 				}
 			emit("(Call #\""+e[1]+"[f"+i+"]\" "+i+")");
 			return;
+		case "WHILE":
+			int gc1 = ++gotoCounter;
+			int gc2 = ++gotoCounter;
+			emit("_L"+gc1+":");
+			generateExpr((Object[])e[1]);
+			emit("(GoFalse _L"+gc2+")");
+			generateExpr((Object[])e[2]);
+			emit("(Go _L"+gc1+")");
+			emit("_L"+gc2+":");
+			return;
 		default:
 			emit("===IMPLEMENT THIS FUNCTIONALITY===");
 			emit((String) e[0]);
@@ -213,14 +223,15 @@ public static void generateExpr(Object[] e) {
 	}
 }
 
-public static int varPos(String name) throws Exception {
-	int ret;
-	try {
-		ret = vars.get(name);
-	} catch (Exception e) {
-		throw new Exception("Variable \'" + name + "\' not declared at line: " + lineFirst);
+
+public static int varargPos(String name) throws Exception {
+	if (args.get(name) != null) {
+		return args.get(name);
 	}
-	return ret;
+	if (vars.get(name) != null) {
+		return vars.get(name) + args.size();
+	}
+	throw new Exception("Variable or argument \'" + name + "\' not declared at line: " + lineFirst);
 }
 
 public static void putMap(String name, HashMap<String, Integer> dict) throws Exception {
@@ -300,7 +311,7 @@ public static Object[] expr_t() throws Exception {
 			return res;
 		case NAME:
 			if (peek() == '=') {
-				int varp = varPos(over(NAME, "A name"));
+				int varp = varargPos(over(NAME, "A name"));
 				over('=');
 				res = new Object[]{"STORE", varp, expr_t()};
 				return res;
@@ -318,6 +329,7 @@ public static Object[] binopexpr_t() throws Exception {
 	while(nextToken() == OPNAME) {
 		String operator;
 		operator = over(OPNAME, "An operator");
+		emit(operator);
 		res.add(smallexpr_t());
 		Object[] opcall = new Object[]{"CALL", operator, res.toArray()};
 		res = new Vector<>();
@@ -372,7 +384,7 @@ public static Object[] smallexpr_t() throws Exception {
 				over(')');
 				res = new Object[]{"CALL", name, lArgs.toArray()};
 			} else {
-				res = new Object[]{"FETCH", vars.get(name)};	
+				res = new Object[]{"FETCH", varargPos(name)};
 			}
 			break;
 	}

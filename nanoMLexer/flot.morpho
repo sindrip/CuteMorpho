@@ -1,0 +1,87 @@
+"flot.mexe" = main in
+!{{
+#"squared[f1]" =
+[
+(Fetch 0)
+(Push)
+(Fetch 0)
+(Call #"*[f2]" 2)
+(Return)
+];
+#"fibo[f1]" =
+[
+(Fetch 0)
+(Push)
+(MakeVal 2)
+(Call #"<=[f2]" 2)
+(GoFalse _L1)
+(MakeVal 1)
+(Return)
+_L1:
+(Fetch 0)
+(Push)
+(MakeVal 1)
+(Call #"-[f2]" 2)
+(Call #"fibo[f1]" 1)
+(Push)
+(Fetch 0)
+(Push)
+(MakeVal 2)
+(Call #"-[f2]" 2)
+(Call #"fibo[f1]" 1)
+(Call #"+[f2]" 2)
+(Return)
+];
+#"countdown[f1]" =
+[
+_L2:
+(Fetch 0)
+(Push)
+(MakeVal 0)
+(Call #">[f2]" 2)
+(GoFalse _L3)
+(Fetch 0)
+(Push)
+(MakeVal 1)
+(Call #"-[f2]" 2)
+(Store 0)
+(Call #"writeln[f1]" 1)
+(Go _L2)
+_L3:
+(Return)
+];
+#"main[f0]" =
+[
+(MakeVal null)
+(Push)
+(MakeVal 1)
+(Push)
+(MakeVal 1)
+(Call #"+[f2]" 2)
+(Push)
+(MakeVal 1)
+(Call #"+[f2]" 2)
+(Store 0)
+(Fetch 0)
+(Call #"writeln[f1]" 1)
+(Fetch 0)
+(Call #"squared[f1]" 1)
+(Call #"writeln[f1]" 1)
+(MakeVal 15)
+(Call #"fibo[f1]" 1)
+(Call #"writeln[f1]" 1)
+(MakeVal "flott")
+(Call #"writeln[f1]" 1)
+(MakeVal 10)
+(Call #"countdown[f1]" 1)
+(Call #"writeln[f1]" 1)
+(MakeVal 1)
+(Push)
+(MakeVal 1)
+(Call #"+[f2]" 2)
+(Push)
+(MakeVal 1)
+(Call #"+[f2]" 2)
+(Return)
+];
+}}*BASIS;

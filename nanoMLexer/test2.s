@@ -1,14 +1,40 @@
-func test(x1) {
-	// vardecl
-	var x;
+// func test(x1) {
+// 	// vardecl
+// 	var x;
 	
-	// expr
-	x = 1;
+// 	// expr
+// 	x = 1;
 
-	if (x) {
-		x = false;
-	} else if (x) {
-		x = true;
+// 	if (x) {
+// 		x = false;
+// 	} else if (x) {
+// 		x = true;
+// 	};
+// }
+
+func squared(x) {
+	return x*x;
+}
+
+// func fibo(n) {
+
+// 	// if (true) {
+// 	// 	return 1;
+// 	// };
+	
+// 	return fibo(n-1) + fibo(n-2);
+// }
+
+func fibo(n) {
+	if (n <= 2) {
+		return 1;
+	};
+	return fibo(n - 1) + fibo(n - 2);
+}
+
+func countdown(n) {
+	while (n > 0) {
+		writeln(n = n - 1);
 	};
 }
 
@@ -17,6 +43,10 @@ func main() {
 
 	x = 1+1+1;
 	writeln(x);
+	writeln(squared(x));
+	writeln(fibo(15));
+	writeln("flott");
+	writeln(countdown(10));
 	return 1+1+1;
 }
 
