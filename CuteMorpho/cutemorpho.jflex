@@ -112,7 +112,6 @@ public static Object[] program_t() throws Exception {
 		funcs.add(function_t());
 	}
 	over(0); //EOF
-	// System.out.println( ((Object[]) ((Object[]) ((Object[]) funcs.get(0))[3])[0])[0] );	
 	return funcs.toArray();
 }
 
@@ -305,7 +304,6 @@ public static void putMap(String name, HashMap<String, Integer> dict) throws Exc
 	dict.put(name, dict.size());
 }
 
-
 public static void emit(String line) {
 	System.out.println(line);
 }
@@ -314,7 +312,7 @@ public static void emit(int i) {
 	System.out.println(i);
 }
 
-public static void generateProgram(String name, Object[] p) {
+public static void generateProgram(String name, Object[] p) throws Exception {
 	gotoCounter = 0;	
 	emit("\""+name+".mexe\" = main in");
 	emit("!{{");
@@ -322,7 +320,7 @@ public static void generateProgram(String name, Object[] p) {
 	emit("}}*BASIS;");
 }
 
-public static void generateFunction(Object[] f) {
+public static void generateFunction(Object[] f) throws Exception {
 	// Reset the goto counter
 	//
 	String fname = (String) f[0];
@@ -342,7 +340,7 @@ public static void generateFunction(Object[] f) {
 	emit("];");
 }
 
-public static void generateExpr(Object[] e) {
+public static void generateExpr(Object[] e) throws Exception {
 	switch((String) e[0]) {
 		case "RETURN":
 			generateExpr((Object[]) e[1]);
@@ -408,10 +406,7 @@ public static void generateExpr(Object[] e) {
 			emit("_L"+gc2+":");
 			return;
 		default:
-			emit("===IMPLEMENT THIS FUNCTIONALITY===");
-			emit((String) e[0]);
-			emit("==================================");		
-			break;
+			throw new Exception("Compiler failure, contact author :(");
 	}
 }
 
