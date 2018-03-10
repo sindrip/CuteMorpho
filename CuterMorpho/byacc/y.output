@@ -1,0 +1,635 @@
+   0  $accept : start $end
+
+   1  start : program
+
+   2  program : program function
+   3          | function
+
+   4  function : FUNC NAME '(' args ')' '{' vars multiexpr '}'
+
+   5  vars :
+   6       | vars VAR NAME ';'
+
+   7  multiexpr :
+   8            | multiexpr expr ';'
+
+   9  exprargs :
+  10           | expr
+  11           | exprargs ',' expr
+
+  12  expr : RETURN expr
+  13       | NAME '=' expr
+  14       | _binopexpr
+
+  15  _binopexpr : _binopexpr OPNAME1 _binopexpr
+  16             | _binopexpr OPNAME2 _binopexpr
+  17             | smallexpr
+
+  18  _operator : OPNAME1
+  19            | OPNAME2
+  20            | OPNAME3
+
+  21  smallexpr : '(' expr ')'
+  22            | LITERAL
+  23            | _operator smallexpr
+  24            | ifexpr
+  25            | NAME
+  26            | NAME '(' exprargs ')'
+
+  27  args :
+  28       | NAME
+  29       | args ',' NAME
+
+  30  ifexpr : IF '(' expr ')' body
+
+  31  body : '{' exprargs '}'
+
+state 0
+	$accept : . start $end  (0)
+
+	FUNC  shift 1
+	.  error
+
+	start  goto 2
+	program  goto 3
+	function  goto 4
+
+
+state 1
+	function : FUNC . NAME '(' args ')' '{' vars multiexpr '}'  (4)
+
+	NAME  shift 5
+	.  error
+
+
+state 2
+	$accept : start . $end  (0)
+
+	$end  accept
+
+
+state 3
+	start : program .  (1)
+	program : program . function  (2)
+
+	FUNC  shift 1
+	$end  reduce 1
+
+	function  goto 6
+
+
+state 4
+	program : function .  (3)
+
+	.  reduce 3
+
+
+state 5
+	function : FUNC NAME . '(' args ')' '{' vars multiexpr '}'  (4)
+
+	'('  shift 7
+	.  error
+
+
+state 6
+	program : program function .  (2)
+
+	.  reduce 2
+
+
+state 7
+	function : FUNC NAME '(' . args ')' '{' vars multiexpr '}'  (4)
+	args : .  (27)
+
+	NAME  shift 8
+	')'  reduce 27
+	','  reduce 27
+
+	args  goto 9
+
+
+state 8
+	args : NAME .  (28)
+
+	.  reduce 28
+
+
+state 9
+	function : FUNC NAME '(' args . ')' '{' vars multiexpr '}'  (4)
+	args : args . ',' NAME  (29)
+
+	')'  shift 10
+	','  shift 11
+	.  error
+
+
+state 10
+	function : FUNC NAME '(' args ')' . '{' vars multiexpr '}'  (4)
+
+	'{'  shift 12
+	.  error
+
+
+state 11
+	args : args ',' . NAME  (29)
+
+	NAME  shift 13
+	.  error
+
+
+state 12
+	function : FUNC NAME '(' args ')' '{' . vars multiexpr '}'  (4)
+	vars : .  (5)
+
+	.  reduce 5
+
+	vars  goto 14
+
+
+state 13
+	args : args ',' NAME .  (29)
+
+	.  reduce 29
+
+
+state 14
+	function : FUNC NAME '(' args ')' '{' vars . multiexpr '}'  (4)
+	vars : vars . VAR NAME ';'  (6)
+	multiexpr : .  (7)
+
+	VAR  shift 15
+	RETURN  reduce 7
+	IF  reduce 7
+	NAME  reduce 7
+	LITERAL  reduce 7
+	OPNAME1  reduce 7
+	OPNAME2  reduce 7
+	OPNAME3  reduce 7
+	'('  reduce 7
+	'}'  reduce 7
+
+	multiexpr  goto 16
+
+
+state 15
+	vars : vars VAR . NAME ';'  (6)
+
+	NAME  shift 17
+	.  error
+
+
+state 16
+	function : FUNC NAME '(' args ')' '{' vars multiexpr . '}'  (4)
+	multiexpr : multiexpr . expr ';'  (8)
+
+	RETURN  shift 18
+	IF  shift 19
+	NAME  shift 20
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	'}'  shift 26
+	.  error
+
+	expr  goto 27
+	_binopexpr  goto 28
+	smallexpr  goto 29
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 17
+	vars : vars VAR NAME . ';'  (6)
+
+	';'  shift 32
+	.  error
+
+
+state 18
+	expr : RETURN . expr  (12)
+
+	RETURN  shift 18
+	IF  shift 19
+	NAME  shift 20
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	.  error
+
+	expr  goto 33
+	_binopexpr  goto 28
+	smallexpr  goto 29
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 19
+	ifexpr : IF . '(' expr ')' body  (30)
+
+	'('  shift 34
+	.  error
+
+
+state 20
+	expr : NAME . '=' expr  (13)
+	smallexpr : NAME .  (25)
+	smallexpr : NAME . '(' exprargs ')'  (26)
+
+	'('  shift 35
+	'='  shift 36
+	OPNAME1  reduce 25
+	OPNAME2  reduce 25
+	')'  reduce 25
+	'}'  reduce 25
+	';'  reduce 25
+	','  reduce 25
+
+
+state 21
+	smallexpr : LITERAL .  (22)
+
+	.  reduce 22
+
+
+state 22
+	_operator : OPNAME1 .  (18)
+
+	.  reduce 18
+
+
+state 23
+	_operator : OPNAME2 .  (19)
+
+	.  reduce 19
+
+
+state 24
+	_operator : OPNAME3 .  (20)
+
+	.  reduce 20
+
+
+state 25
+	smallexpr : '(' . expr ')'  (21)
+
+	RETURN  shift 18
+	IF  shift 19
+	NAME  shift 20
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	.  error
+
+	expr  goto 37
+	_binopexpr  goto 28
+	smallexpr  goto 29
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 26
+	function : FUNC NAME '(' args ')' '{' vars multiexpr '}' .  (4)
+
+	.  reduce 4
+
+
+state 27
+	multiexpr : multiexpr expr . ';'  (8)
+
+	';'  shift 38
+	.  error
+
+
+state 28
+	expr : _binopexpr .  (14)
+	_binopexpr : _binopexpr . OPNAME1 _binopexpr  (15)
+	_binopexpr : _binopexpr . OPNAME2 _binopexpr  (16)
+
+	OPNAME1  shift 39
+	OPNAME2  shift 40
+	')'  reduce 14
+	'}'  reduce 14
+	';'  reduce 14
+	','  reduce 14
+
+
+state 29
+	_binopexpr : smallexpr .  (17)
+
+	.  reduce 17
+
+
+state 30
+	smallexpr : ifexpr .  (24)
+
+	.  reduce 24
+
+
+state 31
+	smallexpr : _operator . smallexpr  (23)
+
+	IF  shift 19
+	NAME  shift 41
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	.  error
+
+	smallexpr  goto 42
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 32
+	vars : vars VAR NAME ';' .  (6)
+
+	.  reduce 6
+
+
+state 33
+	expr : RETURN expr .  (12)
+
+	.  reduce 12
+
+
+state 34
+	ifexpr : IF '(' . expr ')' body  (30)
+
+	RETURN  shift 18
+	IF  shift 19
+	NAME  shift 20
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	.  error
+
+	expr  goto 43
+	_binopexpr  goto 28
+	smallexpr  goto 29
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 35
+	smallexpr : NAME '(' . exprargs ')'  (26)
+	exprargs : .  (9)
+
+	RETURN  shift 18
+	IF  shift 19
+	NAME  shift 20
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	')'  reduce 9
+	','  reduce 9
+
+	expr  goto 44
+	_binopexpr  goto 28
+	smallexpr  goto 29
+	exprargs  goto 45
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 36
+	expr : NAME '=' . expr  (13)
+
+	RETURN  shift 18
+	IF  shift 19
+	NAME  shift 20
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	.  error
+
+	expr  goto 46
+	_binopexpr  goto 28
+	smallexpr  goto 29
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 37
+	smallexpr : '(' expr . ')'  (21)
+
+	')'  shift 47
+	.  error
+
+
+state 38
+	multiexpr : multiexpr expr ';' .  (8)
+
+	.  reduce 8
+
+
+state 39
+	_binopexpr : _binopexpr OPNAME1 . _binopexpr  (15)
+
+	IF  shift 19
+	NAME  shift 41
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	.  error
+
+	_binopexpr  goto 48
+	smallexpr  goto 29
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 40
+	_binopexpr : _binopexpr OPNAME2 . _binopexpr  (16)
+
+	IF  shift 19
+	NAME  shift 41
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	.  error
+
+	_binopexpr  goto 49
+	smallexpr  goto 29
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 41
+	smallexpr : NAME .  (25)
+	smallexpr : NAME . '(' exprargs ')'  (26)
+
+	'('  shift 35
+	OPNAME1  reduce 25
+	OPNAME2  reduce 25
+	')'  reduce 25
+	'}'  reduce 25
+	';'  reduce 25
+	','  reduce 25
+
+
+state 42
+	smallexpr : _operator smallexpr .  (23)
+
+	.  reduce 23
+
+
+state 43
+	ifexpr : IF '(' expr . ')' body  (30)
+
+	')'  shift 50
+	.  error
+
+
+state 44
+	exprargs : expr .  (10)
+
+	.  reduce 10
+
+
+state 45
+	exprargs : exprargs . ',' expr  (11)
+	smallexpr : NAME '(' exprargs . ')'  (26)
+
+	')'  shift 51
+	','  shift 52
+	.  error
+
+
+state 46
+	expr : NAME '=' expr .  (13)
+
+	.  reduce 13
+
+
+state 47
+	smallexpr : '(' expr ')' .  (21)
+
+	.  reduce 21
+
+
+state 48
+	_binopexpr : _binopexpr . OPNAME1 _binopexpr  (15)
+	_binopexpr : _binopexpr OPNAME1 _binopexpr .  (15)
+	_binopexpr : _binopexpr . OPNAME2 _binopexpr  (16)
+
+	OPNAME2  shift 40
+	OPNAME1  reduce 15
+	')'  reduce 15
+	'}'  reduce 15
+	';'  reduce 15
+	','  reduce 15
+
+
+state 49
+	_binopexpr : _binopexpr . OPNAME1 _binopexpr  (15)
+	_binopexpr : _binopexpr . OPNAME2 _binopexpr  (16)
+	_binopexpr : _binopexpr OPNAME2 _binopexpr .  (16)
+
+	.  reduce 16
+
+
+state 50
+	ifexpr : IF '(' expr ')' . body  (30)
+
+	'{'  shift 53
+	.  error
+
+	body  goto 54
+
+
+state 51
+	smallexpr : NAME '(' exprargs ')' .  (26)
+
+	.  reduce 26
+
+
+state 52
+	exprargs : exprargs ',' . expr  (11)
+
+	RETURN  shift 18
+	IF  shift 19
+	NAME  shift 20
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	.  error
+
+	expr  goto 55
+	_binopexpr  goto 28
+	smallexpr  goto 29
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 53
+	body : '{' . exprargs '}'  (31)
+	exprargs : .  (9)
+
+	RETURN  shift 18
+	IF  shift 19
+	NAME  shift 20
+	LITERAL  shift 21
+	OPNAME1  shift 22
+	OPNAME2  shift 23
+	OPNAME3  shift 24
+	'('  shift 25
+	'}'  reduce 9
+	','  reduce 9
+
+	expr  goto 44
+	_binopexpr  goto 28
+	smallexpr  goto 29
+	exprargs  goto 56
+	ifexpr  goto 30
+	_operator  goto 31
+
+
+state 54
+	ifexpr : IF '(' expr ')' body .  (30)
+
+	.  reduce 30
+
+
+state 55
+	exprargs : exprargs ',' expr .  (11)
+
+	.  reduce 11
+
+
+state 56
+	exprargs : exprargs . ',' expr  (11)
+	body : '{' exprargs . '}'  (31)
+
+	'}'  shift 57
+	','  shift 52
+	.  error
+
+
+state 57
+	body : '{' exprargs '}' .  (31)
+
+	.  reduce 31
+
+
+18 terminals, 14 nonterminals
+32 grammar rules, 58 states

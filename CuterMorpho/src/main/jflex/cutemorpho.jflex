@@ -77,7 +77,13 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 	{_DELIM} { yyparser.yylval = new ParserVal(yytext()); return (int) yycharat(0); }
 
 	/* operators */
-	{_OPNAME} { return Parser.OPNAME; }
+    "+"
+    | "-" { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME1; }
+
+    "*"
+    | "/" { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME2; }
+
+	{_OPNAME} { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME3; }
 
 	/* comments */
 	{_COMMENT} { /* ignore */ }
@@ -86,7 +92,7 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 	{_WHITESPACE} { /* ignore */ }
 
 	/* identifiers/name */
-	{_NAME} { return Parser.NAME; }
+	{_NAME} { yyparser.yylval = new ParserVal(yytext()); return Parser.NAME; }
 }
 
 . { return ERROR; }
