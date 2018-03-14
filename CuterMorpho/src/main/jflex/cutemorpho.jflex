@@ -14,6 +14,7 @@
 %unicode
 %byaccj
 %line
+%column
 
 %{
 	// Skilgreiningar á tókum (tokens):
@@ -22,6 +23,14 @@
 	final static int WHILE = 1003;
 
 	private Parser yyparser;
+
+	public int getLine() {
+		return this.yyline;
+	}
+
+	public int getColumn() {
+		return this.yycolumn;
+	}
 
 	public CuteMorphoLexer(java.io.Reader r, Parser yyparser) {
 		this(r);

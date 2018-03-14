@@ -6,17 +6,13 @@
 %token FUNC RETURN IF VAR ELSE WHILE 
 %token <sval> NAME LITERAL OPNAME1 OPNAME2 OPNAME3 OR AND NOT EQUALS
 // %type <ival> 
-%type <obj> program multidecl decl funcdecl vardecl body expr funcargs1 funcargs2
+%type <obj> program multidecl decl funcdecl vardecl body expr opt_funcargs funcargs
 %type <obj> orexpr andexpr notexpr opexpr smallexpr ifexpr elseexpr
-// %type <obj> unaryoperator
+%type <obj> operator
 
-%left OR_LOGICAL
-%left AND_LOGICAL
-%left NOT_LOGICAL
 %left OPNAME1 // other
 %left OPNAME2 // + -
 %left OPNAME3 // * /
-
 
 %%
 
@@ -27,7 +23,7 @@ program: program decl { ((Vector<Object>)($1)).add($2); $$=$1; }
     | decl { $$=new Vector<Object>(); ((Vector<Object>)($$)).add($1); }
     ;
 
-funcdecl: FUNC NAME '(' funcargs1 ')' body 
+funcdecl: FUNC NAME '(' opt_funcargs ')' body 
     { $$=new Object[]{
             "FUNC",
             $2,
@@ -37,11 +33,11 @@ funcdecl: FUNC NAME '(' funcargs1 ')' body
     }
     ;
 
-funcargs1: /* empty */ { $$=new ArrayList<String>(); }
-    | funcargs2 { $$=$1; }
+opt_funcargs: /* empty */ { $$=new ArrayList<String>(); }
+    | funcargs { $$=$1; }
     ;
 
-funcargs2: funcargs2 ',' NAME { ((List<String>)($$)).add($3); } 
+funcargs: funcargs ',' NAME { ((List<String>)($$)).add($3); } 
     | NAME { $$=new ArrayList<String>(); ((List<String>)($$)).add($1); }
     ;
 
@@ -67,24 +63,24 @@ notexpr: opexpr { $$=$1; }
     ;
 
 opexpr: smallexpr { $$=$1; }
-    | opexpr OPNAME1 opexpr { $$=new Object[]{"CALL", $2, $1, $3}; } // other
-    | opexpr OPNAME2 opexpr { $$=new Object[]{"CALL", $2, $1, $3}; } // + -
-    | opexpr OPNAME3 opexpr { $$=new Object[]{"CALL", $2, $1, $3}; } // * /
+    | opexpr OPNAME1 smallexpr { $$=new Object[]{"CALL", $2, $1, $3}; } // other
+    | opexpr OPNAME2 smallexpr { $$=new Object[]{"CALL", $2, $1, $3}; } // other
+    | opexpr OPNAME3 smallexpr { $$=new Object[]{"CALL", $2, $1, $3}; } // other    
     ;
 
-// unaryoperator: OPNAME1 { $$=$1; }
-//     | OPNAME2 { $$=$1; }
-//     | OPNAME3 { $$=$1; }
-//     ;
+operator: OPNAME1 { $$=$1; }
+    | OPNAME2 { $$=$1; }
+    | OPNAME3 { $$=$1; }
+    ;
 
 smallexpr: NAME { $$=new Object[]{"FETCH", $1}; }
-    // call here
-    // | unaryoperator expr { $$=new Object[]{"CALL", $1, $2}; }
+    | NAME '(' ')' { $$=new Object[]{"CALL"}; }
+    | operator smallexpr { $$=new Object[]{"CALL", $1, $2}; }
     | LITERAL { $$=new Object[]{"LITERAL", $1}; }
     | '(' expr ')' { $$=$2; }
     | ifexpr { $$=$1; }
-    // whileexpr here
-    // funcdef here
+    | WHILE '(' expr ')' body { $$=new Object[]{"WHILE", $3, $5}; }
+    // | FUN '(' opt_funcargs ')' body { $$=new Object[]{"MAKECLOSURE", $3, $5}; }
     ;
 
 decl: funcdecl ';' { $$=$1; }
@@ -104,7 +100,7 @@ elseexpr: ELSE body { $$=$2; }
     | ELSE ifexpr { $$=$2; }
     ;
 
-body: '{' multidecl '}' { $$=((Vector<Object>)($2)).toArray(); }
+body: '{' multidecl '}' { $$=new Object[]{"BODY", ((Vector<Object>)($2)).toArray()}; }
     ;
 
 %%

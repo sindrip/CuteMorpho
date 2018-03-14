@@ -19,7 +19,11 @@ public class CuteMorphoCompiler {
         Parser yyparser = new Parser(new FileReader("test.s"));
         yyparser.yyparse();
         Vector<Object> parserOutput = yyparser.getProgram();
-        
+
+        AST ast = new AST(yyparser.getProgram());
+        ast.globalSize();
+        ast.analysis();
+
         prog(parserOutput);
     }
 
@@ -49,11 +53,10 @@ public class CuteMorphoCompiler {
                 ((List<String>)(o[2])).stream()
                     .forEach(a -> sB.append(a + ","));
                 indentEmit("FUNC " + o[1] + "(" + sB.toString() + ")", indent);
-                Stream.of(otoa(o[3]))
-                    .forEach(e -> printer(otoa(e), indent+1));
+                printer(otoa(o[3]), indent+1);
                 break; 
             case "STORE":
-                indentEmit("STORE", indent);
+                indentEmit("STORE" + o[1], indent);
                 printer(otoa(o[2]), indent+1);
                 break;
             case "FETCH":
@@ -82,18 +85,20 @@ public class CuteMorphoCompiler {
                 indentEmit("IF", indent);
                 printer(otoa(o[1]), indent+1);
                 indentEmit("THEN", indent);
-                Stream.of(otoa(o[2]))
-                    .forEach(e -> printer(otoa(e), indent+1));
+                printer(otoa(o[2]), indent+1);
                 break;
             case "IF2":
                 indentEmit("IF", indent);
                 printer(otoa(o[1]), indent+1);
                 indentEmit("THEN", indent);
-                Stream.of(otoa(o[2]))
-                    .forEach(e -> printer(otoa(e), indent+1));
+                printer(otoa(o[2]), indent+1);
                 indentEmit("ELSE", indent);
-                emit(String.valueOf(otoa(o[3])[0]));
                 printer(otoa(o[3]), indent);
+                break;
+            case "BODY":
+                indentEmit("BODY", indent);            
+                Stream.of(otoa(o[1]))
+                    .forEach(e -> printer(otoa(e), indent+1));
                 break;
             default: 
                 indentEmit("No idea what this is", indent);

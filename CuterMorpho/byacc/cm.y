@@ -5,73 +5,127 @@
 %}
 
 
-%token FUNC RETURN IF VAR
+%token FUNC RETURN IF VAR ELSE WHILE
 %token <sval> NAME LITERAL OPNAME1 OPNAME2 OPNAME3
+%token <sval> OR AND NOT EQUALS
 // %type <ival> 
-%type <obj> program function start vars expr args
-%type <obj> _binopexpr smallexpr exprargs ifexpr body multiexpr _operator
+%type <obj> start
+%type <obj> opt_idlist
+%type <obj> idlist
+%type <obj> body
+%type <obj> funcdecl
+%type <obj> bodyexprs
+%type <obj> decl_vars
+%type <obj> expr
+%type <obj> orexpr
+%type <obj> andexpr
+%type <obj> notexpr
+%type <obj> binopexpr
+%type <obj> smallexpr
+%type <obj> args
+%type <obj> arglist
+%type <obj> ifexpr
+%type <obj> elseexpr
+
 %left OPNAME1
 %left OPNAME2
+%left OPNAME3
 %%
-start: program { this.program = (Vector<Object>)$1; }
+
+start: 
+    bodyexprs { this.program = (Vector<Object>)$1; }
     ;
 
-program: program function { ((Vector<Object>)($1)).add($2); $$=$1; }
-    | function { $$=new Vector<Object>(); ((Vector<Object>)($$)).add($1); }
+opt_idlist: 
+    /* empty */ { $$=new ArrayList<String>(); }
+    | idlist { $$=$1; }
     ;
 
-function: FUNC NAME '(' args ')' '{' vars multiexpr '}' {
-        $$ = new Object[]{"FUNC", $2, (List<String>)$4, (List<String>)$7, ((Vector<Object>)($8)).toArray() };
-    }
+idlist: 
+    idlist ',' NAME { ((List<String>)($$)).add($3); }
+    | NAME { $$=new ArrayList<String>(); ((List<String>)($$)).add($1); }
     ;
 
-// need to add multivar!
-vars: /* empty */       { $$=new ArrayList<String>(); }
-    | vars VAR NAME ';' { ((List<String>)($$)).add($3); }
+body:
+    '{' bodyexprs '}' { $$=new Object[]{"BODY", ((Vector<Object>)($2)).toArray()}; }
     ;
 
-multiexpr: /* empty */  { $$=new Vector<Object>(); }
-    | multiexpr expr ';'   { ((Vector<Object>)($$)).add($2); }
+bodyexprs: 
+    bodyexprs expr ';' { ((Vector<Object>)($$)).add($2); }
+    | bodyexprs funcdecl ';' { ((Vector<Object>)($$)).add($2); }
+    | bodyexprs VAR decl_vars ';' { ((Vector<Object>)($$)).add($3);}
+    | /* empty */ { $$=new Vector<Object>();}
     ;
 
-exprargs: /* empty */ { $$=new Vector<Object>(); }
-    | expr { $$=new Vector<Object>(); ((Vector<Object>)($$)).add($1);  }
-    | exprargs ',' expr { ((Vector<Object>)($$)).add($3); }
+funcdecl: 
+    FUNC NAME '(' opt_idlist ')' body { $$=new Object[]{"FUNC", $2, $4, $6}; }
     ;
 
-expr: RETURN expr { $$=new Object[]{"RETURN", $2 }; }
-    | NAME '=' expr { $$=new Object[]{"STORE", $1, $3}; } 
-    | _binopexpr
-    ;
-    
-_binopexpr: _binopexpr OPNAME1 _binopexpr {$$=new Object[]{"CALL", $2, $1, $3}; }
-    | _binopexpr OPNAME2 _binopexpr {$$=new Object[]{"CALL", $2, $1, $3}; }
-    | smallexpr
+decl_vars: 
+    NAME EQUALS expr { $$=new Object[]{"VAR", $1, $3}; }
     ;
 
-_operator: OPNAME1  { $$=$1; }
-    | OPNAME2       { $$=$1; } 
-    | OPNAME3       { $$=$1; }
+expr:
+    RETURN expr { $$=new Object[]{"RETURN", $2}; }
+    | NAME EQUALS expr { $$=new Object[]{"STORE", $1, $3}; }
+    | orexpr { $$=$1; }
     ;
-    
-smallexpr: '(' expr ')' { $$=$2; }
-    | LITERAL { $$=new Object[]{"LITERAL", $1}; }
-    | _operator smallexpr { $$=new Object[]{"CALL", $1, $2}; }
-    | ifexpr { $$=$1; }
+
+orexpr:
+    orexpr OR andexpr { $$=new Object[]{"CALL", $2, $1, $3}; }
+    | andexpr { $$=$1; }
+    ;
+
+andexpr: 
+    andexpr AND notexpr { $$=new Object[]{"CALL", $2, $1, $3}; }
+    | notexpr { $$=$1; }
+    ;
+
+notexpr: 
+    NOT notexpr { $$=new Object[]{"CALL", $1, $2}; }
+    | binopexpr { $$=$1; }
+    ;
+
+binopexpr: 
+    smallexpr OPNAME1 binopexpr { $$=new Object[]{"CALL", $2, $1, $3}; }
+    | smallexpr OPNAME2 binopexpr { $$=new Object[]{"CALL", $2, $1, $3}; }
+    | smallexpr OPNAME3 binopexpr { $$=new Object[]{"CALL", $2, $1, $3}; }
+    | smallexpr { $$=$1; }
+    ;
+
+smallexpr: 
+    OPNAME1 smallexpr { $$=new Object[]{"CALL", $1, $2}; }
+    | OPNAME2 smallexpr { $$=new Object[]{"CALL", $1, $2}; }
+    | OPNAME3 smallexpr { $$=new Object[]{"CALL", $1, $2}; }     
+    | '(' expr ')' { $$=$2; }
     | NAME { $$=new Object[]{"FETCH", $1}; }
-    | NAME '(' exprargs ')' { $$=new Object[]{"CALL", $1}; }
+    | NAME '(' args ')' { $$=new Object[]{"CALL", $1, $3 }; }
+    | WHILE '(' expr ')' body { $$=new Object[]{"WHILE", $3, $5}; }
+    | ifexpr { $$=$1; }
+    | LITERAL { $$=new Object[]{"LITERAL", $1}; }
+    | body { $$=$1; }
+    // | FUNC '(' opt_idlist ')' body
     ;
 
-args: /* empty */       { $$=new ArrayList<String>(); }
-    | NAME              { $$=new ArrayList<String>(); ((List<String>)$$).add($1); }
-    | args ',' NAME     { ((List<String>)$$).add($3); }
+args: /* empty */ { $$=new Object[]{"ARGS", new Object[]{} }; }
+    | arglist { $$=new Object[]{"ARGS", ((Vector<Object>)($1)).toArray()}; }
     ;
 
-ifexpr: IF '(' expr ')' body { $$=new Object[]{"IF", $3, $5}; }
+arglist: 
+    arglist ',' expr { ((Vector<Object>)($$)).add($3); }
+    | expr { $$=new Vector<Object>(); ((Vector<Object>)($$)).add($1); }
     ;
 
-body: '{' exprargs '}' { $$=new Object[]{ "BODY", ((Vector<Object>)($2)).toArray() }; }
+ifexpr: 
+    IF '(' expr ')' body  { $$=new Object[]{"IF1", $3, $5}; }
+    | IF '(' expr ')' body elseexpr { $$=new Object[]{"IF2", $3, $5, $6}; }
     ;
+
+elseexpr: 
+    ELSE body { $$=$2; }
+    | ELSE ifexpr { $$=$2; }
+    ;
+
 %%
 
 
@@ -100,6 +154,8 @@ body: '{' exprargs '}' { $$=new Object[]{ "BODY", ((Vector<Object>)($2)).toArray
     public void yyerror(String error) {
         System.out.println("Error: " + error);
         System.out.println("Token: " + Parser.yyname[last_token_read]);
+        System.out.println("Line: " + lexer.getLine()+1);
+        System.out.println("Column: " + lexer.getColumn());
         System.exit(1);
     }
 
