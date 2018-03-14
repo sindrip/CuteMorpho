@@ -45,8 +45,11 @@ public class CuteMorphoCompiler {
     public static void printer(Object[] o, final int indent) {
         switch((String)o[0]) {
             case "FUNC":
-                indentEmit("FUNC", indent);
-                Stream.of(otoa(o[4]))
+                final StringBuilder sB = new StringBuilder();
+                ((List<String>)(o[2])).stream()
+                    .forEach(a -> sB.append(a + ","));
+                indentEmit("FUNC " + o[1] + "(" + sB.toString() + ")", indent);
+                Stream.of(otoa(o[3]))
                     .forEach(e -> printer(otoa(e), indent+1));
                 break; 
             case "STORE":
@@ -54,10 +57,14 @@ public class CuteMorphoCompiler {
                 printer(otoa(o[2]), indent+1);
                 break;
             case "FETCH":
-                indentEmit("FETCH", indent);
+                indentEmit("FETCH: " + o[1], indent);                
                 break;
             case "LITERAL":
                 indentEmit("LITERAL: " + o[1], indent);    
+                break;
+            case "VAR":
+                indentEmit("VAR: " + o[1], indent);
+                printer(otoa(o[2]), indent+1);
                 break;
             case "RETURN":
                 indentEmit("RETURN", indent);
@@ -70,6 +77,13 @@ public class CuteMorphoCompiler {
                     printer(otoa(o[2]), indent+1);
                     printer(otoa(o[3]), indent+1);
                 }
+                break;
+            case "IF":
+                indentEmit("IF", indent);
+                printer(otoa(o[1]), indent+1);
+                indentEmit("THEN", indent);
+                Stream.of(otoa(o[2]))
+                    .forEach(e -> printer(otoa(e), indent+1));
                 break;
             default: 
                 indentEmit("No idea what this is", indent);

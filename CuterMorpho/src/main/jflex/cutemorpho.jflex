@@ -41,7 +41,7 @@ _INT 	= -? {_DIGIT}+
 _STRING = \"([^\"\\]|\\b|\\t|\\n|\\f|\\r|\\\"|\\\'|\\\\|\\[0-3]?[0-7]?[0-7])*\"
 _CHAR 	= \'([^\'\\]|\\b|\\t|\\n|\\f|\\r|\\\"|\\\'|\\\\|\\[0-3]?[0-7]?[0-7])\'
 
-_DELIM 	= [(){},;=]
+_DELIM 	= [(){},;]
 
 _OPNAME = [\:&|><=+\-*/%!?~\^]+
 
@@ -58,8 +58,8 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 <YYINITIAL> {
 	/* keywords */
 	"if" 		{ return Parser.IF; }
-	"else" 		{ return ELSE; }
-	"while" 	{ return WHILE; }
+	"else" 		{ return Parser.ELSE; }
+	"while" 	{ return Parser.WHILE; }
 	"return" 	{ return Parser.RETURN; }
 	"func" 		{ return Parser.FUNC; }
 	"var" 		{ yyparser.yylval = new ParserVal(yytext()); return Parser.VAR; }
@@ -77,13 +77,19 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 	{_DELIM} { yyparser.yylval = new ParserVal(yytext()); return (int) yycharat(0); }
 
 	/* operators */
+    "=" { yyparser.yylval = new ParserVal(yytext()); return Parser.EQUALS; }
+
     "+"
-    | "-" { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME1; }
+    | "-" { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME2; }
 
     "*"
-    | "/" { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME2; }
-
-	{_OPNAME} { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME3; }
+    | "/" { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME3; }
+    
+    "||" {yyparser.yylval=new ParserVal(yytext()); return Parser.OR; }
+    "&&" {yyparser.yylval=new ParserVal(yytext()); return Parser.AND; }
+    "!"  {yyparser.yylval=new ParserVal(yytext()); return Parser.NOT; }
+    
+	{_OPNAME} { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME1; }
 
 	/* comments */
 	{_COMMENT} { /* ignore */ }
