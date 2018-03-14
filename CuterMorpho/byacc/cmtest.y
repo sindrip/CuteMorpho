@@ -6,8 +6,8 @@
 %token FUNC RETURN IF VAR ELSE WHILE 
 %token <sval> NAME LITERAL OPNAME1 OPNAME2 OPNAME3 OR AND NOT EQUALS
 // %type <ival> 
-%type <obj> program multidecl decl funcdecl vardecl body expr funcargs
-%type <obj> orexpr andexpr notexpr opexpr smallexpr ifexpr
+%type <obj> program multidecl decl funcdecl vardecl body expr funcargs1 funcargs2
+%type <obj> orexpr andexpr notexpr opexpr smallexpr ifexpr elseexpr
 // %type <obj> unaryoperator
 
 %left OR_LOGICAL
@@ -27,7 +27,7 @@ program: program decl { ((Vector<Object>)($1)).add($2); $$=$1; }
     | decl { $$=new Vector<Object>(); ((Vector<Object>)($$)).add($1); }
     ;
 
-funcdecl: FUNC NAME '(' funcargs ')' body 
+funcdecl: FUNC NAME '(' funcargs1 ')' body 
     { $$=new Object[]{
             "FUNC",
             $2,
@@ -37,9 +37,12 @@ funcdecl: FUNC NAME '(' funcargs ')' body
     }
     ;
 
-funcargs: /* empty */ { $$=new ArrayList<String>(); }
+funcargs1: /* empty */ { $$=new ArrayList<String>(); }
+    | funcargs2 { $$=$1; }
+    ;
+
+funcargs2: funcargs2 ',' NAME { ((List<String>)($$)).add($3); } 
     | NAME { $$=new ArrayList<String>(); ((List<String>)($$)).add($1); }
-    | funcargs ',' NAME { ((List<String>)$$).add($3); }
     ;
 
 // No multi declaration implemented (i.e. var x, y = 2;)
@@ -93,7 +96,13 @@ multidecl: multidecl decl { ((Vector<Object>)($$)).add($2); }
     | decl { $$=new Vector<Object>(); ((Vector<Object>)($$)).add($1); }
     ;
 
-ifexpr: IF '(' expr ')' body { $$=new Object[]{"IF", $3, $5}; }
+ifexpr: IF '(' expr ')' body { $$=new Object[]{"IF1", $3, $5}; }
+    | IF '(' expr ')' body elseexpr { $$=new Object[]{"IF2", $3, $5, $6}; }
+    ;
+
+elseexpr: ELSE body { $$=$2; }
+    | ELSE ifexpr { $$=$2; }
+    ;
 
 body: '{' multidecl '}' { $$=((Vector<Object>)($2)).toArray(); }
     ;

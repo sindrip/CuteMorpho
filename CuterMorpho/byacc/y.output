@@ -5,47 +5,53 @@
    2  program : program decl
    3          | decl
 
-   4  funcdecl : FUNC NAME '(' funcargs ')' body
+   4  funcdecl : FUNC NAME '(' funcargs1 ')' body
 
-   5  funcargs :
-   6           | NAME
-   7           | funcargs ',' NAME
+   5  funcargs1 :
+   6            | funcargs2
 
-   8  vardecl : VAR NAME EQUALS expr
+   7  funcargs2 : funcargs2 ',' NAME
+   8            | NAME
 
-   9  expr : RETURN expr
-  10       | NAME EQUALS expr
-  11       | orexpr
+   9  vardecl : VAR NAME EQUALS expr
 
-  12  orexpr : andexpr
-  13         | orexpr OR andexpr
+  10  expr : RETURN expr
+  11       | NAME EQUALS expr
+  12       | orexpr
 
-  14  andexpr : notexpr
-  15          | andexpr AND notexpr
+  13  orexpr : andexpr
+  14         | orexpr OR andexpr
 
-  16  notexpr : opexpr
-  17          | NOT notexpr
+  15  andexpr : notexpr
+  16          | andexpr AND notexpr
 
-  18  opexpr : smallexpr
-  19         | opexpr OPNAME1 opexpr
-  20         | opexpr OPNAME2 opexpr
-  21         | opexpr OPNAME3 opexpr
+  17  notexpr : opexpr
+  18          | NOT notexpr
 
-  22  smallexpr : NAME
-  23            | LITERAL
-  24            | '(' expr ')'
-  25            | ifexpr
+  19  opexpr : smallexpr
+  20         | opexpr OPNAME1 opexpr
+  21         | opexpr OPNAME2 opexpr
+  22         | opexpr OPNAME3 opexpr
 
-  26  decl : funcdecl ';'
-  27       | vardecl ';'
-  28       | expr ';'
+  23  smallexpr : NAME
+  24            | LITERAL
+  25            | '(' expr ')'
+  26            | ifexpr
 
-  29  multidecl : multidecl decl
-  30            | decl
+  27  decl : funcdecl ';'
+  28       | vardecl ';'
+  29       | expr ';'
 
-  31  ifexpr : IF '(' expr ')' body
+  30  multidecl : multidecl decl
+  31            | decl
 
-  32  body : '{' multidecl '}'
+  32  ifexpr : IF '(' expr ')' body
+  33         | IF '(' expr ')' body elseexpr
+
+  34  elseexpr : ELSE body
+  35           | ELSE ifexpr
+
+  36  body : '{' multidecl '}'
 
 state 0
 	$accept : . start $end  (0)
@@ -75,14 +81,14 @@ state 0
 
 
 state 1
-	funcdecl : FUNC . NAME '(' funcargs ')' body  (4)
+	funcdecl : FUNC . NAME '(' funcargs1 ')' body  (4)
 
 	NAME  shift 21
 	.  error
 
 
 state 2
-	expr : RETURN . expr  (9)
+	expr : RETURN . expr  (10)
 
 	RETURN  shift 2
 	IF  shift 3
@@ -102,41 +108,42 @@ state 2
 
 
 state 3
-	ifexpr : IF . '(' expr ')' body  (31)
+	ifexpr : IF . '(' expr ')' body  (32)
+	ifexpr : IF . '(' expr ')' body elseexpr  (33)
 
 	'('  shift 23
 	.  error
 
 
 state 4
-	vardecl : VAR . NAME EQUALS expr  (8)
+	vardecl : VAR . NAME EQUALS expr  (9)
 
 	NAME  shift 24
 	.  error
 
 
 state 5
-	expr : NAME . EQUALS expr  (10)
-	smallexpr : NAME .  (22)
+	expr : NAME . EQUALS expr  (11)
+	smallexpr : NAME .  (23)
 
 	EQUALS  shift 25
-	OPNAME1  reduce 22
-	OPNAME2  reduce 22
-	OPNAME3  reduce 22
-	OR  reduce 22
-	AND  reduce 22
-	')'  reduce 22
-	';'  reduce 22
+	OPNAME1  reduce 23
+	OPNAME2  reduce 23
+	OPNAME3  reduce 23
+	OR  reduce 23
+	AND  reduce 23
+	')'  reduce 23
+	';'  reduce 23
 
 
 state 6
-	smallexpr : LITERAL .  (23)
+	smallexpr : LITERAL .  (24)
 
-	.  reduce 23
+	.  reduce 24
 
 
 state 7
-	notexpr : NOT . notexpr  (17)
+	notexpr : NOT . notexpr  (18)
 
 	IF  shift 3
 	NAME  shift 26
@@ -152,7 +159,7 @@ state 7
 
 
 state 8
-	smallexpr : '(' . expr ')'  (24)
+	smallexpr : '(' . expr ')'  (25)
 
 	RETURN  shift 2
 	IF  shift 3
@@ -210,93 +217,94 @@ state 11
 
 
 state 12
-	decl : funcdecl . ';'  (26)
+	decl : funcdecl . ';'  (27)
 
 	';'  shift 30
 	.  error
 
 
 state 13
-	decl : vardecl . ';'  (27)
+	decl : vardecl . ';'  (28)
 
 	';'  shift 31
 	.  error
 
 
 state 14
-	decl : expr . ';'  (28)
+	decl : expr . ';'  (29)
 
 	';'  shift 32
 	.  error
 
 
 state 15
-	expr : orexpr .  (11)
-	orexpr : orexpr . OR andexpr  (13)
+	expr : orexpr .  (12)
+	orexpr : orexpr . OR andexpr  (14)
 
 	OR  shift 33
-	')'  reduce 11
-	';'  reduce 11
-
-
-state 16
-	orexpr : andexpr .  (12)
-	andexpr : andexpr . AND notexpr  (15)
-
-	AND  shift 34
-	OR  reduce 12
 	')'  reduce 12
 	';'  reduce 12
 
 
-state 17
-	andexpr : notexpr .  (14)
+state 16
+	orexpr : andexpr .  (13)
+	andexpr : andexpr . AND notexpr  (16)
 
-	.  reduce 14
+	AND  shift 34
+	OR  reduce 13
+	')'  reduce 13
+	';'  reduce 13
+
+
+state 17
+	andexpr : notexpr .  (15)
+
+	.  reduce 15
 
 
 state 18
-	notexpr : opexpr .  (16)
-	opexpr : opexpr . OPNAME1 opexpr  (19)
-	opexpr : opexpr . OPNAME2 opexpr  (20)
-	opexpr : opexpr . OPNAME3 opexpr  (21)
+	notexpr : opexpr .  (17)
+	opexpr : opexpr . OPNAME1 opexpr  (20)
+	opexpr : opexpr . OPNAME2 opexpr  (21)
+	opexpr : opexpr . OPNAME3 opexpr  (22)
 
 	OPNAME1  shift 35
 	OPNAME2  shift 36
 	OPNAME3  shift 37
-	OR  reduce 16
-	AND  reduce 16
-	')'  reduce 16
-	';'  reduce 16
+	OR  reduce 17
+	AND  reduce 17
+	')'  reduce 17
+	';'  reduce 17
 
 
 state 19
-	opexpr : smallexpr .  (18)
+	opexpr : smallexpr .  (19)
 
-	.  reduce 18
+	.  reduce 19
 
 
 state 20
-	smallexpr : ifexpr .  (25)
+	smallexpr : ifexpr .  (26)
 
-	.  reduce 25
+	.  reduce 26
 
 
 state 21
-	funcdecl : FUNC NAME . '(' funcargs ')' body  (4)
+	funcdecl : FUNC NAME . '(' funcargs1 ')' body  (4)
 
 	'('  shift 38
 	.  error
 
 
 state 22
-	expr : RETURN expr .  (9)
+	expr : RETURN expr .  (10)
 
-	.  reduce 9
+	.  reduce 10
 
 
 state 23
-	ifexpr : IF '(' . expr ')' body  (31)
+	ifexpr : IF '(' . expr ')' body  (32)
+	ifexpr : IF '(' . expr ')' body elseexpr  (33)
 
 	RETURN  shift 2
 	IF  shift 3
@@ -316,14 +324,14 @@ state 23
 
 
 state 24
-	vardecl : VAR NAME . EQUALS expr  (8)
+	vardecl : VAR NAME . EQUALS expr  (9)
 
 	EQUALS  shift 40
 	.  error
 
 
 state 25
-	expr : NAME EQUALS . expr  (10)
+	expr : NAME EQUALS . expr  (11)
 
 	RETURN  shift 2
 	IF  shift 3
@@ -343,19 +351,19 @@ state 25
 
 
 state 26
-	smallexpr : NAME .  (22)
+	smallexpr : NAME .  (23)
 
-	.  reduce 22
+	.  reduce 23
 
 
 state 27
-	notexpr : NOT notexpr .  (17)
+	notexpr : NOT notexpr .  (18)
 
-	.  reduce 17
+	.  reduce 18
 
 
 state 28
-	smallexpr : '(' expr . ')'  (24)
+	smallexpr : '(' expr . ')'  (25)
 
 	')'  shift 42
 	.  error
@@ -368,25 +376,25 @@ state 29
 
 
 state 30
-	decl : funcdecl ';' .  (26)
-
-	.  reduce 26
-
-
-state 31
-	decl : vardecl ';' .  (27)
+	decl : funcdecl ';' .  (27)
 
 	.  reduce 27
 
 
-state 32
-	decl : expr ';' .  (28)
+state 31
+	decl : vardecl ';' .  (28)
 
 	.  reduce 28
 
 
+state 32
+	decl : expr ';' .  (29)
+
+	.  reduce 29
+
+
 state 33
-	orexpr : orexpr OR . andexpr  (13)
+	orexpr : orexpr OR . andexpr  (14)
 
 	IF  shift 3
 	NAME  shift 26
@@ -403,7 +411,7 @@ state 33
 
 
 state 34
-	andexpr : andexpr AND . notexpr  (15)
+	andexpr : andexpr AND . notexpr  (16)
 
 	IF  shift 3
 	NAME  shift 26
@@ -419,7 +427,7 @@ state 34
 
 
 state 35
-	opexpr : opexpr OPNAME1 . opexpr  (19)
+	opexpr : opexpr OPNAME1 . opexpr  (20)
 
 	IF  shift 3
 	NAME  shift 26
@@ -433,7 +441,7 @@ state 35
 
 
 state 36
-	opexpr : opexpr OPNAME2 . opexpr  (20)
+	opexpr : opexpr OPNAME2 . opexpr  (21)
 
 	IF  shift 3
 	NAME  shift 26
@@ -447,7 +455,7 @@ state 36
 
 
 state 37
-	opexpr : opexpr OPNAME3 . opexpr  (21)
+	opexpr : opexpr OPNAME3 . opexpr  (22)
 
 	IF  shift 3
 	NAME  shift 26
@@ -461,25 +469,26 @@ state 37
 
 
 state 38
-	funcdecl : FUNC NAME '(' . funcargs ')' body  (4)
-	funcargs : .  (5)
+	funcdecl : FUNC NAME '(' . funcargs1 ')' body  (4)
+	funcargs1 : .  (5)
 
 	NAME  shift 48
 	')'  reduce 5
-	','  reduce 5
 
-	funcargs  goto 49
+	funcargs1  goto 49
+	funcargs2  goto 50
 
 
 state 39
-	ifexpr : IF '(' expr . ')' body  (31)
+	ifexpr : IF '(' expr . ')' body  (32)
+	ifexpr : IF '(' expr . ')' body elseexpr  (33)
 
-	')'  shift 50
+	')'  shift 51
 	.  error
 
 
 state 40
-	vardecl : VAR NAME EQUALS . expr  (8)
+	vardecl : VAR NAME EQUALS . expr  (9)
 
 	RETURN  shift 2
 	IF  shift 3
@@ -489,7 +498,7 @@ state 40
 	'('  shift 8
 	.  error
 
-	expr  goto 51
+	expr  goto 52
 	orexpr  goto 15
 	andexpr  goto 16
 	notexpr  goto 17
@@ -499,120 +508,127 @@ state 40
 
 
 state 41
-	expr : NAME EQUALS expr .  (10)
+	expr : NAME EQUALS expr .  (11)
 
-	.  reduce 10
+	.  reduce 11
 
 
 state 42
-	smallexpr : '(' expr ')' .  (24)
+	smallexpr : '(' expr ')' .  (25)
 
-	.  reduce 24
+	.  reduce 25
 
 
 state 43
-	orexpr : orexpr OR andexpr .  (13)
-	andexpr : andexpr . AND notexpr  (15)
+	orexpr : orexpr OR andexpr .  (14)
+	andexpr : andexpr . AND notexpr  (16)
 
 	AND  shift 34
-	OR  reduce 13
-	')'  reduce 13
-	';'  reduce 13
+	OR  reduce 14
+	')'  reduce 14
+	';'  reduce 14
 
 
 state 44
-	andexpr : andexpr AND notexpr .  (15)
+	andexpr : andexpr AND notexpr .  (16)
 
-	.  reduce 15
+	.  reduce 16
 
 
 state 45
-	opexpr : opexpr . OPNAME1 opexpr  (19)
-	opexpr : opexpr OPNAME1 opexpr .  (19)
-	opexpr : opexpr . OPNAME2 opexpr  (20)
-	opexpr : opexpr . OPNAME3 opexpr  (21)
+	opexpr : opexpr . OPNAME1 opexpr  (20)
+	opexpr : opexpr OPNAME1 opexpr .  (20)
+	opexpr : opexpr . OPNAME2 opexpr  (21)
+	opexpr : opexpr . OPNAME3 opexpr  (22)
 
 	OPNAME2  shift 36
 	OPNAME3  shift 37
-	OPNAME1  reduce 19
-	OR  reduce 19
-	AND  reduce 19
-	')'  reduce 19
-	';'  reduce 19
-
-
-state 46
-	opexpr : opexpr . OPNAME1 opexpr  (19)
-	opexpr : opexpr . OPNAME2 opexpr  (20)
-	opexpr : opexpr OPNAME2 opexpr .  (20)
-	opexpr : opexpr . OPNAME3 opexpr  (21)
-
-	OPNAME3  shift 37
 	OPNAME1  reduce 20
-	OPNAME2  reduce 20
 	OR  reduce 20
 	AND  reduce 20
 	')'  reduce 20
 	';'  reduce 20
 
 
-state 47
-	opexpr : opexpr . OPNAME1 opexpr  (19)
-	opexpr : opexpr . OPNAME2 opexpr  (20)
-	opexpr : opexpr . OPNAME3 opexpr  (21)
-	opexpr : opexpr OPNAME3 opexpr .  (21)
+state 46
+	opexpr : opexpr . OPNAME1 opexpr  (20)
+	opexpr : opexpr . OPNAME2 opexpr  (21)
+	opexpr : opexpr OPNAME2 opexpr .  (21)
+	opexpr : opexpr . OPNAME3 opexpr  (22)
 
-	.  reduce 21
+	OPNAME3  shift 37
+	OPNAME1  reduce 21
+	OPNAME2  reduce 21
+	OR  reduce 21
+	AND  reduce 21
+	')'  reduce 21
+	';'  reduce 21
+
+
+state 47
+	opexpr : opexpr . OPNAME1 opexpr  (20)
+	opexpr : opexpr . OPNAME2 opexpr  (21)
+	opexpr : opexpr . OPNAME3 opexpr  (22)
+	opexpr : opexpr OPNAME3 opexpr .  (22)
+
+	.  reduce 22
 
 
 state 48
-	funcargs : NAME .  (6)
-
-	.  reduce 6
-
-
-state 49
-	funcdecl : FUNC NAME '(' funcargs . ')' body  (4)
-	funcargs : funcargs . ',' NAME  (7)
-
-	')'  shift 52
-	','  shift 53
-	.  error
-
-
-state 50
-	ifexpr : IF '(' expr ')' . body  (31)
-
-	'{'  shift 54
-	.  error
-
-	body  goto 55
-
-
-state 51
-	vardecl : VAR NAME EQUALS expr .  (8)
+	funcargs2 : NAME .  (8)
 
 	.  reduce 8
 
 
-state 52
-	funcdecl : FUNC NAME '(' funcargs ')' . body  (4)
+state 49
+	funcdecl : FUNC NAME '(' funcargs1 . ')' body  (4)
 
-	'{'  shift 54
+	')'  shift 53
+	.  error
+
+
+state 50
+	funcargs1 : funcargs2 .  (6)
+	funcargs2 : funcargs2 . ',' NAME  (7)
+
+	','  shift 54
+	')'  reduce 6
+
+
+state 51
+	ifexpr : IF '(' expr ')' . body  (32)
+	ifexpr : IF '(' expr ')' . body elseexpr  (33)
+
+	'{'  shift 55
 	.  error
 
 	body  goto 56
 
 
-state 53
-	funcargs : funcargs ',' . NAME  (7)
+state 52
+	vardecl : VAR NAME EQUALS expr .  (9)
 
-	NAME  shift 57
+	.  reduce 9
+
+
+state 53
+	funcdecl : FUNC NAME '(' funcargs1 ')' . body  (4)
+
+	'{'  shift 55
 	.  error
+
+	body  goto 57
 
 
 state 54
-	body : '{' . multidecl '}'  (32)
+	funcargs2 : funcargs2 ',' . NAME  (7)
+
+	NAME  shift 58
+	.  error
+
+
+state 55
+	body : '{' . multidecl '}'  (36)
 
 	FUNC  shift 1
 	RETURN  shift 2
@@ -624,8 +640,8 @@ state 54
 	'('  shift 8
 	.  error
 
-	multidecl  goto 58
-	decl  goto 59
+	multidecl  goto 59
+	decl  goto 60
 	funcdecl  goto 12
 	vardecl  goto 13
 	expr  goto 14
@@ -637,27 +653,37 @@ state 54
 	ifexpr  goto 20
 
 
-state 55
-	ifexpr : IF '(' expr ')' body .  (31)
-
-	.  reduce 31
-
-
 state 56
-	funcdecl : FUNC NAME '(' funcargs ')' body .  (4)
+	ifexpr : IF '(' expr ')' body .  (32)
+	ifexpr : IF '(' expr ')' body . elseexpr  (33)
+
+	ELSE  shift 61
+	OPNAME1  reduce 32
+	OPNAME2  reduce 32
+	OPNAME3  reduce 32
+	OR  reduce 32
+	AND  reduce 32
+	')'  reduce 32
+	';'  reduce 32
+
+	elseexpr  goto 62
+
+
+state 57
+	funcdecl : FUNC NAME '(' funcargs1 ')' body .  (4)
 
 	.  reduce 4
 
 
-state 57
-	funcargs : funcargs ',' NAME .  (7)
+state 58
+	funcargs2 : funcargs2 ',' NAME .  (7)
 
 	.  reduce 7
 
 
-state 58
-	multidecl : multidecl . decl  (29)
-	body : '{' multidecl . '}'  (32)
+state 59
+	multidecl : multidecl . decl  (30)
+	body : '{' multidecl . '}'  (36)
 
 	FUNC  shift 1
 	RETURN  shift 2
@@ -667,10 +693,10 @@ state 58
 	LITERAL  shift 6
 	NOT  shift 7
 	'('  shift 8
-	'}'  shift 60
+	'}'  shift 63
 	.  error
 
-	decl  goto 61
+	decl  goto 64
 	funcdecl  goto 12
 	vardecl  goto 13
 	expr  goto 14
@@ -682,23 +708,53 @@ state 58
 	ifexpr  goto 20
 
 
-state 59
-	multidecl : decl .  (30)
+state 60
+	multidecl : decl .  (31)
+
+	.  reduce 31
+
+
+state 61
+	elseexpr : ELSE . body  (34)
+	elseexpr : ELSE . ifexpr  (35)
+
+	IF  shift 3
+	'{'  shift 55
+	.  error
+
+	body  goto 65
+	ifexpr  goto 66
+
+
+state 62
+	ifexpr : IF '(' expr ')' body elseexpr .  (33)
+
+	.  reduce 33
+
+
+state 63
+	body : '{' multidecl '}' .  (36)
+
+	.  reduce 36
+
+
+state 64
+	multidecl : multidecl decl .  (30)
 
 	.  reduce 30
 
 
-state 60
-	body : '{' multidecl '}' .  (32)
+state 65
+	elseexpr : ELSE body .  (34)
 
-	.  reduce 32
-
-
-state 61
-	multidecl : multidecl decl .  (29)
-
-	.  reduce 29
+	.  reduce 34
 
 
-26 terminals, 16 nonterminals
-33 grammar rules, 62 states
+state 66
+	elseexpr : ELSE ifexpr .  (35)
+
+	.  reduce 35
+
+
+26 terminals, 18 nonterminals
+37 grammar rules, 67 states

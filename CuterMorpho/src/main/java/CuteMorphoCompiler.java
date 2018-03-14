@@ -78,12 +78,22 @@ public class CuteMorphoCompiler {
                     printer(otoa(o[3]), indent+1);
                 }
                 break;
-            case "IF":
+            case "IF1":
                 indentEmit("IF", indent);
                 printer(otoa(o[1]), indent+1);
                 indentEmit("THEN", indent);
                 Stream.of(otoa(o[2]))
                     .forEach(e -> printer(otoa(e), indent+1));
+                break;
+            case "IF2":
+                indentEmit("IF", indent);
+                printer(otoa(o[1]), indent+1);
+                indentEmit("THEN", indent);
+                Stream.of(otoa(o[2]))
+                    .forEach(e -> printer(otoa(e), indent+1));
+                indentEmit("ELSE", indent);
+                emit(String.valueOf(otoa(o[3])[0]));
+                printer(otoa(o[3]), indent);
                 break;
             default: 
                 indentEmit("No idea what this is", indent);
