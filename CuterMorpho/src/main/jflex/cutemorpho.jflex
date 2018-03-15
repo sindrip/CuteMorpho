@@ -22,6 +22,10 @@
 
 	private Parser yyparser;
 
+	public String getSemantic() {
+		return "flot";
+	}
+
 	public int getLine() {
 		return this.yyline;
 	}

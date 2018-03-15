@@ -14,7 +14,9 @@ public class CuteMorphoCompiler {
     public static void main(String[] args) throws Exception {
         System.out.println("run");
         CuteMorphoParser yyparser = new CuteMorphoParser(new FileReader("test.s"));
-        System.out.println(yyparser.getProgram());
+        yyparser.yylex();
+        System.out.println(String.valueOf(yyparser.parse()));
+        System.out.println(String.valueOf(yyparser.getProgram().getNodes()));
         System.out.println("end");        
     }
 }

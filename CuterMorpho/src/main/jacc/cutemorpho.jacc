@@ -18,20 +18,23 @@
 %next      yylex()
 
 %token FUNC
-%token NAME
+%token <StringContainerNode> NAME
 %token IF ELSE WHILE RETURN VAR LITERAL EQUALS 
 %token OPNAME1 OPNAME2 OPNAME3 OR AND NOT
+%type <FuncNode> funcdecl
+%type <RootNode> bodyexprs
+
 
 %%
 
-start:  bodyexprs
+start:  bodyexprs { System.out.println($$); }
         ;
 
-bodyexprs:  bodyexprs funcdecl ';'
-            | /* EMPTY */ 
+bodyexprs:  bodyexprs funcdecl ';' { $$ = new RootNode($1, $2);}
+            | /* EMPTY */ { $$=new RootNode();  }
             ;
 
-funcdecl:   FUNC NAME '(' ')' body { this.program = new FuncNode($2); }
+funcdecl:   FUNC NAME '(' ')' body { $$=new FuncNode($2); }
             ;
 
 body:   '{' '}'
@@ -42,21 +45,26 @@ body:   '{' '}'
 
     int token;
     int last_token_read;  
-    Node program;
-    StringNode yylval;
+    RootNode program;
+    StringContainerNode yylval;
 
-    public Node getProgram() {
+    public RootNode getProgram() {
         return this.program;
     }
 
-    private int yylex () {
+    int yylex () {
         int yyl_return = -1;
-        try {        
+        try {    
+            yylval = null;
+            System.out.println(token); 
             token = lexer.yylex();
+            if (yylval == null) {
+                yylval = new StringContainerNode("string");
+            }
         } catch (IOException e) {
             System.err.println("IO error :"+e);
         }
-        return yyl_return;
+        return token;
     }
 
     private void yyerror(String msg) {

@@ -2,9 +2,9 @@ package ast;
 
 public class FuncNode extends Node {
 
-    public Node name;
+    public String name;
 
-    public FuncNode(Node sn) {
-        this.name = sn;
+    public FuncNode(StringContainerNode name) {
+        this.name = name.val();
     }
 }
