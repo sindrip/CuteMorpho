@@ -19,8 +19,6 @@
 %{
 	// Skilgreiningar á tókum (tokens):
 	final static int ERROR = -1;
-	final static int ELSE = 1002;
-	final static int WHILE = 1003;
 
 	private Parser yyparser;
 
@@ -71,7 +69,7 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 	"while" 	{ return Parser.WHILE; }
 	"return" 	{ return Parser.RETURN; }
 	"func" 		{ return Parser.FUNC; }
-	"var" 		{ yyparser.yylval = new ParserVal(yytext()); return Parser.VAR; }
+	"var" 		{ return Parser.VAR; }
 
 	/* literals */
 	{_STRING} 
@@ -80,25 +78,25 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 	| {_INT} 
 	| "null" 
 	| "true" 
-	| "false" { yyparser.yylval = new ParserVal(yytext()); return Parser.LITERAL;}
+	| "false" { return Parser.LITERAL;}
 
 	/* delimiters/seperators */
-	{_DELIM} { yyparser.yylval = new ParserVal(yytext()); return (int) yycharat(0); }
+	{_DELIM} { return (int) yycharat(0); }
 
 	/* operators */
-    "=" { yyparser.yylval = new ParserVal(yytext()); return Parser.EQUALS; }
+    "=" { return Parser.EQUALS; }
 
     "+"
-    | "-" { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME2; }
+    | "-" { return Parser.OPNAME2; }
 
     "*"
-    | "/" { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME3; }
+    | "/" { return Parser.OPNAME3; }
     
-    "||" {yyparser.yylval=new ParserVal(yytext()); return Parser.OR; }
-    "&&" {yyparser.yylval=new ParserVal(yytext()); return Parser.AND; }
-    "!"  {yyparser.yylval=new ParserVal(yytext()); return Parser.NOT; }
+    "||" { return Parser.OR; }
+    "&&" { return Parser.AND; }
+    "!"  { return Parser.NOT; }
     
-	{_OPNAME} { yyparser.yylval = new ParserVal(yytext()); return Parser.OPNAME1; }
+	{_OPNAME} { return Parser.OPNAME1; }
 
 	/* comments */
 	{_COMMENT} { /* ignore */ }
@@ -107,7 +105,7 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 	{_WHITESPACE} { /* ignore */ }
 
 	/* identifiers/name */
-	{_NAME} { yyparser.yylval = new ParserVal(yytext()); return Parser.NAME; }
+	{_NAME} { return Parser.NAME; }
 }
 
 . { return ERROR; }

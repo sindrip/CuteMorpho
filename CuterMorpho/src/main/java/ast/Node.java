@@ -1,6 +1,5 @@
 package ast;
 
-public interface Node {
+public abstract class Node {
 
-    void Accept(Visitor visitor);
 }

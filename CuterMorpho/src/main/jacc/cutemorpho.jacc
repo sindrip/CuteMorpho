@@ -1,0 +1,69 @@
+// To compile and run this program using jacc and Sun's JDK:
+//
+//    jacc simpleCalc.jacc
+//    javac Calc.java CalcTokens.java
+//    java  Calc
+//     ... enter arithmetic expressions ... hit EOF to terminate
+//
+%{
+    import java.io.*;
+    import java.util.*;
+    import ast.*;
+%}
+
+%class     CuteMorphoParser
+%interface Parser
+%semantic  Node: yylval
+%get       token
+%next      yylex()
+
+%token FUNC
+%token NAME
+%token IF ELSE WHILE RETURN VAR LITERAL EQUALS 
+%token OPNAME1 OPNAME2 OPNAME3 OR AND NOT
+
+%%
+
+start:  bodyexprs
+        ;
+
+bodyexprs:  bodyexprs funcdecl ';'
+            | /* EMPTY */ 
+            ;
+
+funcdecl:   FUNC NAME '(' ')' body { this.program = new FuncNode($2); }
+            ;
+
+body:   '{' '}'
+        ;
+
+%%
+    private CuteMorphoLexer lexer;
+
+    int token;
+    int last_token_read;  
+    Node program;
+    StringNode yylval;
+
+    public Node getProgram() {
+        return this.program;
+    }
+
+    private int yylex () {
+        int yyl_return = -1;
+        try {        
+            token = lexer.yylex();
+        } catch (IOException e) {
+            System.err.println("IO error :"+e);
+        }
+        return yyl_return;
+    }
+
+    private void yyerror(String msg) {
+        System.out.println("ERROR: " + msg);
+        System.exit(1);
+    }
+
+    public CuteMorphoParser(Reader r) {
+        lexer = new CuteMorphoLexer(r, this);
+    }
