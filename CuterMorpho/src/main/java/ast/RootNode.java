@@ -10,10 +10,6 @@ public class RootNode extends Node {
         this.nodes = new ArrayList<>();
     }
 
-    public RootNode(RootNode n1, Node n2) {
-        this.nodes = n1.add(n2);
-    }
-
     public List<Node> add(Node n) {
         this.nodes.add(n);
         return this.nodes;

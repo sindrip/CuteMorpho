@@ -16,15 +16,11 @@
 %line
 %column
 
-%{
+%{ 
 	// Skilgreiningar á tókum (tokens):
 	final static int ERROR = -1;
 
-	private Parser yyparser;
-
-	public String getSemantic() {
-		return "flot";
-	}
+	private CuteMorphoParser yyparser;
 
 	public int getLine() {
 		return this.yyline;
@@ -34,7 +30,7 @@
 		return this.yycolumn;
 	}
 
-	public CuteMorphoLexer(java.io.Reader r, Parser yyparser) {
+	public CuteMorphoLexer(java.io.Reader r, CuteMorphoParser yyparser) {
 		this(r);
 		this.yyparser = yyparser;
 	}
@@ -79,13 +75,13 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 	{_STRING} 
 	| {_FLOAT} 
 	| {_CHAR} 
-	| {_INT} 
+	| {_INT}
 	| "null" 
 	| "true" 
-	| "false" { return Parser.LITERAL;}
+	| "false" { yyparser.yylvals = yytext(); return Parser.LITERAL;}
 
 	/* delimiters/seperators */
-	{_DELIM} { return (int) yycharat(0); }
+	{_DELIM} { yyparser.yylvals = yytext(); return (int) yycharat(0); }
 
 	/* operators */
     "=" { return Parser.EQUALS; }
@@ -100,7 +96,7 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
     "&&" { return Parser.AND; }
     "!"  { return Parser.NOT; }
     
-	{_OPNAME} { return Parser.OPNAME1; }
+	{_OPNAME} { yyparser.yylvals = yytext(); return Parser.OPNAME1; }
 
 	/* comments */
 	{_COMMENT} { /* ignore */ }
@@ -109,7 +105,7 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 	{_WHITESPACE} { /* ignore */ }
 
 	/* identifiers/name */
-	{_NAME} { return Parser.NAME; }
+	{_NAME} { yyparser.yylvals = yytext(); return Parser.NAME; }
 }
 
 . { return ERROR; }

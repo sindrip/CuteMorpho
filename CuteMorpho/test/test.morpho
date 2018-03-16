@@ -1,0 +1,40 @@
+"test.mexe" = main in
+!{{
+
+{;;;
+    adderFactory = (x) => {
+        return (y) => {
+            return x+y;
+        }
+    };
+;;;}
+
+#"main[f0]" =
+[
+(MakeClosure 0 1 0 _L2) ;;; Create adderFactory
+(Fetch 0)               ;;; x
+(MakeClosure 0 1 1 _L3) ;;; Create lambda
+(Fetch 0)               ;;; x (same as above)
+(FetchP 1)              ;;; y
+(Call #"+[f2]" 2)       ;;; x+y
+(Return)                ;;; return x+y
+_L3:                    ;;; end lambda
+(Return)                ;;; return lambda
+_L2:                    ;;; end adderFactory
+(Push)                  ;;; adderFactory closure is on stack
+(Store 0)               ;;; Save it in variable 0
+
+(Fetch 0)               ;;; get adderFactory closure (Even though it's on top of the stack already)
+(MakeValP 5)            ;;; Factory top of stack; ac -> 5
+(CallClosure 1)         ;;; adderFactory(5) -> (y){return 5+y}
+(StoreP 1)              ;;; Save adder5 in variable 1
+
+(Fetch 1)               ;;; Get adder5
+(MakeValP 100)          ;;; Create 100
+(CallClosure 1)         ;;; 100 + 5
+
+(Call #"writeln[f1]" 1)
+
+(Return)
+];
+}}*BASIS;

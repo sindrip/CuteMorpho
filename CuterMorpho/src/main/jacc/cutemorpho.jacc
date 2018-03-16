@@ -17,9 +17,9 @@
 %get       token
 %next      yylex()
 
-%token FUNC
 %token <StringContainerNode> NAME
-%token IF ELSE WHILE RETURN VAR LITERAL EQUALS 
+%token <StringContainerNode> LITERAL
+%token FUNC VAR IF ELSE WHILE RETURN  EQUALS 
 %token OPNAME1 OPNAME2 OPNAME3 OR AND NOT
 %type <FuncNode> funcdecl
 %type <RootNode> bodyexprs
@@ -27,18 +27,23 @@
 
 %%
 
-start:  bodyexprs { System.out.println($$); }
+start:  bodyexprs { this.program = $1; }
         ;
 
-bodyexprs:  bodyexprs funcdecl ';' { $$ = new RootNode($1, $2);}
-            | /* EMPTY */ { $$=new RootNode();  }
+bodyexprs:  bodyexprs funcdecl ';' { $1.add($2); $$=$1; }
+            | bodyexprs VAR NAME EQUALS expr ';' { $$ = new VarNode((StringContainerNode)$5); }
+            | /* EMPTY */ { $$ = new RootNode();}
             ;
 
-funcdecl:   FUNC NAME '(' ')' body { $$=new FuncNode($2); }
+funcdecl:   FUNC NAME '(' ')' body { $$ = new FuncNode($2); }
             ;
 
-body:   '{' '}'
+body:   '{' bodyexprs '}'
         ;
+
+expr:   LITERAL { $$ = $1; System.out.println($$); }
+    ;
+
 
 %%
     private CuteMorphoLexer lexer;
@@ -46,7 +51,8 @@ body:   '{' '}'
     int token;
     int last_token_read;  
     RootNode program;
-    StringContainerNode yylval;
+    public StringContainerNode yylval;
+    public String yylvals;
 
     public RootNode getProgram() {
         return this.program;
@@ -58,9 +64,7 @@ body:   '{' '}'
             yylval = null;
             System.out.println(token); 
             token = lexer.yylex();
-            if (yylval == null) {
-                yylval = new StringContainerNode("string");
-            }
+            yylval = new StringContainerNode(yylvals);
         } catch (IOException e) {
             System.err.println("IO error :"+e);
         }

@@ -12,11 +12,18 @@ import javax.management.InstanceAlreadyExistsException;
 public class CuteMorphoCompiler {
 
     public static void main(String[] args) throws Exception {
-        System.out.println("run");
+        emit("run");
         CuteMorphoParser yyparser = new CuteMorphoParser(new FileReader("test.s"));
+        
         yyparser.yylex();
-        System.out.println(String.valueOf(yyparser.parse()));
-        System.out.println(String.valueOf(yyparser.getProgram().getNodes()));
-        System.out.println("end");        
+        emit(String.valueOf(yyparser.parse()));
+
+        emit(String.valueOf(yyparser.getProgram()));
+
+        emit("end");        
+    }
+
+    static void emit(String s) {
+        System.out.println(s);
     }
 }
