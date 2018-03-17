@@ -18,8 +18,6 @@ public class CuteMorphoCompiler {
         yyparser.yylex();
         emit(String.valueOf(yyparser.parse()));
 
-        emit(String.valueOf(yyparser.getProgram()));
-
         emit("end");        
     }
 
