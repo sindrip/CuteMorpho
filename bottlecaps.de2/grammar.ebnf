@@ -1,0 +1,27 @@
+/* Extensible Markup Language (XML) 1.0 (Fifth Edition)
+ * version http://www.w3.org/TR/2008/REC-xml-20081126/
+ * extracted from http://www.w3.org/TR/xml/ on Fri Jan 26, 2018, 22:23 (UTC)
+ */
+
+program ::= ( vardecl ';' | expr ';' )*
+
+vardecl ::= 'var' NAME '=' expr
+
+expr ::= 'return' expr
+| NAME '=' expr 
+| orexpr
+
+orexpr ::= ((andexpr) ( '||' andexpr )*)
+
+andexpr ::= ((notexpr) ( '&&' notexpr )*)
+
+notexpr ::= ('!' notexpr)
+| binopexpr
+
+binopexpr ::= ((smallexpr) ( OPNAME smallexpr)*)
+
+smallexpr ::= NAME
+
+ifexpr ::= 'if' '(' expr ')' body ( | 'else' (body | ifexpr) )
+
+body ::= '{' (expr ';')+ '}'
