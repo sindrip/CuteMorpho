@@ -43,8 +43,8 @@ _LINETERMINATOR = \r|\n|\r\n
 _INPUTCHARACTER = [^\r\n]
 
 _DIGIT 	= [0-9]
-_FLOAT 	= -? {_DIGIT}+\.{_DIGIT}+([eE][+-]?{_DIGIT}+)?
-_INT 	= -? {_DIGIT}+
+_FLOAT 	= {_DIGIT}+\.{_DIGIT}+([eE][+-]?{_DIGIT}+)?
+_INT 	= {_DIGIT}+
 _STRING = \"([^\"\\]|\\b|\\t|\\n|\\f|\\r|\\\"|\\\'|\\\\|\\[0-3]?[0-7]?[0-7])*\"
 _CHAR 	= \'([^\'\\]|\\b|\\t|\\n|\\f|\\r|\\\"|\\\'|\\\\|\\[0-3]?[0-7]?[0-7])\'
 
@@ -87,14 +87,14 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
     "=" { return yyparser.EQUALS; }
 
     "+"
-    | "-" { return yyparser.OPNAME2; }
+    | "-" { yyparser.yylval = yytext(); return yyparser.OPNAME2; }
 
     "*"
-    | "/" { return yyparser.OPNAME3; }
+    | "/" { yyparser.yylval = yytext(); return yyparser.OPNAME3; }
     
-    "||" { return yyparser.OR; }
-    "&&" { return yyparser.AND; }
-    "!"  { return yyparser.NOT; }
+    "||" { yyparser.yylval = yytext(); return yyparser.OR; }
+    "&&" { yyparser.yylval = yytext(); return yyparser.AND; }
+    "!"  { yyparser.yylval = yytext(); return yyparser.NOT; }
     
 	{_OPNAME} { yyparser.yylval = yytext(); return yyparser.OPNAME1; }
 
