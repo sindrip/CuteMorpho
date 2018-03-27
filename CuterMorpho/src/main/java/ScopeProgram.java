@@ -35,9 +35,7 @@ public class ScopeProgram {
     private void createScopes(Object[] o) throws Exception{
         switch((String)o[0]) {
             case "VARDECL":
-                if (!env.inGlobal()) {
-                    o[1] = env.addVar(String.valueOf(o[1]));
-                }
+                o[1] = env.addVar(String.valueOf(o[1]));
                 createScopes(otoa(o[2]));
             break;
             case "ASSIGN":
@@ -123,6 +121,30 @@ public class ScopeProgram {
                         }
                 });
             break;
+            case "IF1":
+                createScopes(otoa(o[1]));
+                createScopes(otoa(o[2]));                
+            break;
+            case "IF2":
+                createScopes(otoa(o[1]));
+                createScopes(otoa(o[2]));   
+                createScopes(otoa(o[3]));
+            break;
+            case "WHILE":
+                createScopes(otoa(o[1]));
+                createScopes(otoa(o[2]));                
+            break;
+            case "AND":
+                createScopes(otoa(o[1]));
+                createScopes(otoa(o[2]));                
+            break;
+            case "OR":
+                createScopes(otoa(o[1]));
+                createScopes(otoa(o[2]));  
+            break;
+            case "NOT":
+                createScopes(otoa(o[1]));
+            break;
             default:
                 System.out.println("Don't know what this is: " + o[0]);
             break;
@@ -133,8 +155,7 @@ public class ScopeProgram {
      * Convert names in the AST to integer ID's
     ***/
     public void scope() {
-        createGlobalScope();
-
+        env.newScope();
         this.program.stream()
         .forEach(f -> {
             try {
@@ -142,6 +163,7 @@ public class ScopeProgram {
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }           
-        });    
+        });   
+        env.exitScope(); 
     }
 }

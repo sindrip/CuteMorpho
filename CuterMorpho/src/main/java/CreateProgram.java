@@ -84,12 +84,58 @@ public class CreateProgram {
                 int labend = this.lab++;             
                 emit("(MakeClosure 0 "+otoa(e[1]).length+" "+e[3] + " _L"+labend+")");
                 generateExpr(otoa(e[2]));
+                emit("(Return)");
                 emit("_L"+labend+":");
             break;
             case "BODY":
                 generateBody(otoa(e[1]));
             break;
-
+            case "IF1":
+                int iflab = this.lab++;
+                generateExpr(otoa(e[1]));
+                emit("(GoFalse _L"+iflab+")");
+                generateExpr(otoa(e[2]));
+                emit("_L"+iflab+":");
+            break;
+            case "IF2":
+                int ifelab1 = this.lab++;
+                int ifelab2 = this.lab++;
+                generateExpr(otoa(e[1]));
+                emit("(GoFalse _L"+ifelab1+")");
+                generateExpr(otoa(e[2]));
+                emit("(Go _L"+ifelab2+")");
+                emit("_L"+ifelab1+":");
+                generateExpr(otoa(e[3]));
+                emit("_L"+ifelab2+":");                
+            break;
+            case "WHILE":
+                int wlab1 = this.lab++;
+                int wlab2 = this.lab++;
+                emit("_L"+wlab1+":");
+                generateExpr(otoa(e[1]));
+                emit("(GoFalse _L"+wlab2+")");
+                generateExpr(otoa(e[2]));
+                emit("(Go _L"+wlab1+")");
+                emit("_L"+wlab2+":");
+            break;
+            case "AND":
+                int andlab = this.lab++;
+                generateExpr(otoa(e[1]));
+                emit("(GoFalse _L"+andlab+")");
+                generateExpr(otoa(e[2]));
+                emit("_L"+andlab+":");
+            break;
+            case "OR":
+                int orlab = this.lab++;
+                generateExpr(otoa(e[1]));
+                emit("(GoTrue _L"+orlab+")");
+                generateExpr(otoa(e[2]));
+                emit("_L"+orlab+":");
+            break;
+            case "NOT":
+                generateExpr(otoa(e[1]));
+                emit("(Not)");
+            break;
             default:
                 emit("      UNKNOWN: " + e[0]);
             break;

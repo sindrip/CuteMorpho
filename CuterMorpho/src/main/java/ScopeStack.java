@@ -17,10 +17,6 @@ public class ScopeStack {
         this.varCounter = 0;
     }
 
-    public boolean inGlobal() {
-        return scopes.size() == 1;
-    }
-
     public int getVarCounter() {
         return this.varCounter;
     }
