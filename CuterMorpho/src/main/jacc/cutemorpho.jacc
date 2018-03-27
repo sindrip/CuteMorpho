@@ -23,8 +23,6 @@
 %type <Vector> bodyexprs
 %type <Vector> arglist
 %type <Vector> idlist
-// %type <Object[]> vardecl
-// %type <VarNode> vardecl
 %token UNOP
 
 %left OPNAME1
@@ -135,7 +133,8 @@ unscoped_body:
     private CuteMorphoLexer lexer;
 
     int token;
-    int last_token_read;  
+    int last_token_read;
+    int t_line;
     public String yylval;
     private Vector<Object> program;
 
@@ -148,6 +147,7 @@ unscoped_body:
         try {    
             yylval = null;
             token = lexer.yylex();
+            t_line = lexer.getLine();
             // yylval = "This is string";
         } catch (IOException e) {
             System.err.println("IO error :"+e);
@@ -157,6 +157,8 @@ unscoped_body:
 
     private void yyerror(String msg) {
         System.out.println("ERROR: " + msg);
+        System.out.println("LINE: " + t_line);
+        System.out.println("LAST READ: " + this.yylval);
         System.exit(1);
     }
 

@@ -1,6 +1,9 @@
 import java.awt.print.PrinterAbortException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Vector;
 import java.util.stream.Stream;
@@ -15,8 +18,16 @@ import com.google.errorprone.annotations.Var;
 public class CuteMorphoCompiler {
 
     public static void main(String[] args) throws Exception {
-        CuteMorphoParser yyparser = new CuteMorphoParser(new FileReader("test.s"));
+        System.out.println(args.length);
+        if (args.length == 0) {
+            throw new Exception("Specify .cmorpho filename to compile in arguments");
+        }
+        if (!args[0].endsWith(".cmorpho")) {
+            throw new Exception("This compiler only accepts .cmorpho files");
+        }
+        String filename = args[0].replaceFirst(".cmorpho$", "");
         
+        CuteMorphoParser yyparser = new CuteMorphoParser(new FileReader(args[0]));
         yyparser.yylex();
         yyparser.parse();
 
@@ -25,8 +36,37 @@ public class CuteMorphoCompiler {
         ScopeProgram sc = new ScopeProgram(p);
         sc.scope();
         
-        CreateProgram cp = new CreateProgram(p);
-        cp.printMexe();        
+        CreateProgram cp = new CreateProgram(p, filename);
+        PrintStream out = new PrintStream(new FileOutputStream(filename+".morpho"));
+        PrintStream stdout = System.out;
+        System.setOut(out);
+        cp.printMexe();
+        System.setOut(stdout);
+        
+        System.out.println("======Creating .mexe======");
+        callProc("java -jar morpho.jar -c "+filename+".morpho");
+        System.out.println("==========Done============");
+        System.out.println("\n================================");        
+        System.out.println("=======Running Program==========");
+        System.out.println("================================");        
+        callProc("java -jar morpho.jar "+filename);
+    }
+
+    static void callProc(String s) throws Exception {
+        Process proc = Runtime.getRuntime().exec(s);
+        proc.waitFor();
+
+        //2 inputstream for the result and for the errors in subprogram     
+        InputStream in = proc.getInputStream();
+        InputStream err = proc.getErrorStream();
+
+        byte b[]=new byte[in.available()];
+        in.read(b,0,b.length);
+        System.out.println(new String(b));
+
+        byte c[]=new byte[err.available()];
+        err.read(c,0,c.length);
+        System.out.println(new String(c));
     }
 
     static void emit(String s) {

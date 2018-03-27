@@ -5,9 +5,11 @@ public class CreateProgram {
 
     private int lab;
     private Vector<Object> program;
+    private String filename;
 
-    public CreateProgram(Vector<Object> program) {
+    public CreateProgram(Vector<Object> program, String filename) {
         this.program = program;
+        this.filename = filename;
         lab = 0;
     }
     // UTIL START
@@ -20,7 +22,7 @@ public class CreateProgram {
     // UTIL END
 
     private void generateProgram() {
-        emit("\"test.mexe\" = main in");
+        emit("\""+filename+".mexe\" = main in");
         emit("!{{");
         emit("#\"main[f0]\" =");
         emit("[");

@@ -64,12 +64,12 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 
 <YYINITIAL> {
 	/* keywords */
-	"if" 		{ return yyparser.IF; }
-	"else" 		{ return yyparser.ELSE; }
-	"while" 	{ return yyparser.WHILE; }
-	"return" 	{ return yyparser.RETURN; }
-	"func" 		{ return yyparser.FUNC; }
-	"var" 		{ return yyparser.VAR; }
+	"if" 		{ yyparser.yylval = yytext(); return yyparser.IF; }
+	"else" 		{ yyparser.yylval = yytext(); return yyparser.ELSE; }
+	"while" 	{ yyparser.yylval = yytext(); return yyparser.WHILE; }
+	"return" 	{ yyparser.yylval = yytext(); return yyparser.RETURN; }
+	"func" 		{ yyparser.yylval = yytext(); return yyparser.FUNC; }
+	"var" 		{ yyparser.yylval = yytext(); return yyparser.VAR; }
 
 	/* literals */
 	{_STRING} 
@@ -84,7 +84,7 @@ _NAME 	= ([:letter:]|_)([:letter:]|{_DIGIT}|_)*
 	{_DELIM} { yyparser.yylval = yytext(); return (int) yycharat(0); }
 
 	/* operators */
-    "=" { return yyparser.EQUALS; }
+    "=" { yyparser.yylval = yytext(); return yyparser.EQUALS; }
 
     "+"
     | "-" { yyparser.yylval = yytext(); return yyparser.OPNAME2; }
