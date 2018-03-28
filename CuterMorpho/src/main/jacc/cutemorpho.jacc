@@ -1,0 +1,167 @@
+// To compile and run this program using jacc and Sun's JDK:
+//
+//    jacc simpleCalc.jacc
+//    javac Calc.java CalcTokens.java
+//    java  Calc
+//     ... enter arithmetic expressions ... hit EOF to terminate
+//
+%{
+    import java.io.*;
+    import java.util.*;
+%}
+
+%class     CuteMorphoParser
+%interface Parser
+%semantic  Object: yylval
+%get       token
+%next      yylex()
+
+%token NAME
+%token <String> LITERAL
+%token FUNC VAR IF ELSE WHILE RETURN EQUALS 
+%token OPNAME1 OPNAME2 OPNAME3 OR AND NOT
+%type <Vector> bodyexprs
+%type <Vector> arglist
+%type <Vector> idlist
+%token UNOP
+
+%left OPNAME1
+%left OPNAME2
+%left OPNAME3
+%left UNOP
+
+%%
+
+start:  
+    bodyexprs { this.program = $1; }
+    ;
+
+bodyexprs:  
+    bodyexprs expr ';' { $$=$1.add($2); $$=$1; }
+    | bodyexprs vardecl ';' { $1.add($2); $$=$1; }
+    | /* EMPTY */ { $$=new Vector<Object>(); }
+    ;
+
+vardecl:
+    VAR NAME EQUALS expr { $$=new Object[]{"VARDECL", $2, $4 }; }
+    ;
+
+expr:   
+    RETURN expr { $$=new Object[]{"RETURN", $2}; }
+    | NAME EQUALS expr { $$=new Object[]{"ASSIGN", $1, $3}; }
+    | orexpr
+    ;
+
+orexpr:
+    orexpr OR andexpr { $$=new Object[]{"OR", $1, $3}; }
+    | andexpr
+    ;
+
+andexpr:
+    andexpr AND notexpr { $$=new Object[]{"AND", $1, $3}; }
+    | notexpr
+    ;
+
+notexpr:
+    NOT notexpr { $$=new Object[]{"NOT", $2}; }
+    | binopexpr
+    ;
+
+operators:
+    OPNAME1
+    | OPNAME2
+    | OPNAME3
+    ;
+
+binopexpr:
+    smallexpr operators binopexpr { $$=new Object[]{"CALL", $2, new Object[]{$1, $3} }; }
+    | smallexpr
+    ;
+
+smallexpr:
+    operators smallexpr %prec UNOP { $$=new Object[]{"CALL", $1, new Object[]{$2} }; }
+    | '(' expr ')' { $$=$2; }
+    | LITERAL { $$=new Object[]{"LITERAL", $1}; }
+    | NAME { $$=new Object[]{"FETCH", $1}; }
+    | NAME '(' args ')' { $$=new Object[]{"UNKNOWN_CALL", $1, $3}; }
+    | FUNC '(' opt_idlist ')' unscoped_body { $$=new Object[]{"MAKECLOSURE", $3, $5, 0}; }
+    | ifexpr
+    | WHILE '(' expr ')' unscoped_body { $$=new Object[]{"WHILE", $3, $5}; }
+    | body
+    ;
+
+ifexpr: 
+    IF '(' expr ')' unscoped_body  { $$=new Object[]{"IF1", $3, $5}; }
+    | IF '(' expr ')' unscoped_body elseexpr { $$=new Object[]{"IF2", $3, $5, $6}; }
+    ;
+
+elseexpr: 
+    ELSE unscoped_body { $$=$2; }
+    | ELSE ifexpr { $$=$2; }
+    ;
+
+
+opt_idlist:
+    /* empty */ { $$=new Object[]{}; }
+    | idlist { $$=((Vector<Object>)$1).toArray(); }
+    ;
+
+idlist:
+    idlist ',' NAME { $1.add($3); $$=$1; }
+    | NAME { $$=new Vector<Object>(); ((Vector<Object>)$$).add($1); }
+    ;
+
+args:
+    /* empty */ { $$=new Object[]{}; }
+    | arglist { $$=((Vector<Object>)$1).toArray(); }
+    ;
+
+arglist:
+    arglist ',' expr { $1.add($3); $$=$1;}
+    | expr { $$=new Vector<Object>(); ((Vector<Object>)$$).add($1);  }
+    ;
+
+body:   
+    '{' bodyexprs '}' { $$=new Object[]{"BODY", $2.toArray()}; }
+    ;
+
+unscoped_body:
+    '{' bodyexprs '}' { $$=new Object[]{"UNSCOPEDBODY", $2.toArray()}; }
+    ;
+
+%%
+    private CuteMorphoLexer lexer;
+
+    int token;
+    int last_token_read;
+    int t_line;
+    public String yylval;
+    private Vector<Object> program;
+
+    public Vector<Object> getProgram() {
+        return this.program;
+    }
+
+    int yylex () {
+        int yyl_return = -1;
+        try {    
+            yylval = null;
+            token = lexer.yylex();
+            t_line = lexer.getLine();
+            // yylval = "This is string";
+        } catch (IOException e) {
+            System.err.println("IO error :"+e);
+        }
+        return token;
+    }
+
+    private void yyerror(String msg) {
+        System.out.println("ERROR: " + msg);
+        System.out.println("LINE: " + t_line);
+        System.out.println("LAST READ: " + this.yylval);
+        System.exit(1);
+    }
+
+    public CuteMorphoParser(Reader r) {
+        lexer = new CuteMorphoLexer(r, this);
+    }
