@@ -1,3 +1,4 @@
+import java.security.cert.CertPathChecker;
 import java.util.Vector;
 import java.util.stream.Stream;
 
@@ -32,15 +33,25 @@ public class ScopeProgram {
             });
     }
 
-    private void createScopes(Object[] o) throws Exception{
+    private void createScopes(Object[] o) {
         switch((String)o[0]) {
             case "VARDECL":
-                o[1] = env.addVar(String.valueOf(o[1]));
-                createScopes(otoa(o[2]));
+                try {
+                    o[1] = env.addVar(String.valueOf(o[1]));
+                    createScopes(otoa(o[2]));
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    System.exit(-1);       
+                }
             break;
             case "ASSIGN":
-                o[1] = env.getVar(String.valueOf(o[1]));
-                createScopes(otoa(o[2]));
+                try {
+                    o[1] = env.getVar(String.valueOf(o[1]));
+                    createScopes(otoa(o[2]));
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    System.exit(-1);    
+                }
             break;
             case "RETURN":
                 createScopes(otoa(o[1]));
@@ -49,7 +60,12 @@ public class ScopeProgram {
                 // Do nothing
             break;
             case "FETCH":
-                o[1] = env.getVar(String.valueOf(o[1]));
+                try {
+                    o[1] = env.getVar(String.valueOf(o[1]));
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    System.exit(-1);  
+                }
             break;
             case "CALL":
                 Stream.of(otoa(o[2]))
