@@ -27,12 +27,6 @@ public class CreateProgram {
         emit("#\"main[f0]\" =");
         emit("[");
         
-        //Need null values on the stack for making a closure
-        emit("(MakeVal null)");
-        for(int i = 0; i < this.program.size()-1; i++) {
-            emit("(Push)");
-        }
-        
         this.program.stream()
             .forEach(e -> {
                 generateExpr(otoa(e));
@@ -46,6 +40,8 @@ public class CreateProgram {
     private void generateExpr(Object[] e) {
         switch((String)e[0]) {
             case "VARDECL":
+                emit("(MakeVal null)");
+                emit("(Push)");
                 generateExpr(otoa(e[2]));
                 emit("(Store "+e[1]+")");
             break;

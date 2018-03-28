@@ -1,0 +1,44 @@
+// =====================================
+// Example of a function factory
+// =====================================
+
+// var adderFactory = func(x) {
+//     return func(y) {
+//         return x+y;
+//     };
+// };
+
+// var adder5 = adderFactory(5);
+// var a5res = adder5(10);
+
+// var adder100 = adderFactory(100);
+// var a100res = adder100(5);
+
+// if (a5res == 15 && a100res == 105) {
+//     writeln("Factory pass");
+// } else {
+//     writeln("Factory fail");
+// };
+
+// writeln("===========================================");
+// =================================
+// Example of scope
+// =================================
+// var outer = 100;
+// writeln("variable outer in outer scope: " ++ outer);
+// var inner = func() {
+//     writeln("variable outer in inner scope: " ++ outer);    
+//     var x = 1;
+//     writeln("local overridden variable outer in inner scope: " ++ outer);    
+//     writeln(outer);
+// };
+// inner();
+// writeln("variable outer in outer scope after call: " ++ outer);
+
+var outer = 100;
+
+{
+    writeln(outer);
+    var outer = 10;
+    writeln(outer);
+};
