@@ -63,7 +63,7 @@ andexpr:
     ;
 
 notexpr:
-    NOT notexpr { $$=new Object[]{"NOT", $2}; }
+    NOT binopexpr { $$=new Object[]{"NOT", $2}; }
     | binopexpr
     ;
 
